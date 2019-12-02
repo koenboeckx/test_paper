@@ -1,0 +1,128 @@
+%
+% Rmathesis.sty
+% P. Lindekens, D. Van Heule (RMA, 03/2006)
+%
+%%
+%% DO NOT CHANGE THIS FILE
+%%
+\NeedsTeXFormat{LaTeX2e}%
+\ProvidesPackage{rmathesis}[2006/03/07 RMA Thesis package]%
+\RequirePackage{color}% Needed for chapter adaptation
+\RequirePackage{fncychap}% Needed for chapter adaptation
+\RequirePackage{graphicx}% Needed for titlepage adaptation
+\RequirePackage{fancyhdr}% Needed for header adaptation
+\setlength{\headheight}{13.6 pt}
+\RequirePackage{chngpage}%
+\RequirePackage[toc, title, page]{appendix}
+%
+\setlength{\parindent}{0 pt}
+%
+% - roman pagenumbering with counter reset - \rome
+%
+\newcommand{\rome}[1]{
+ \setcounter{page}{1}
+ \renewcommand{\thepage}{\roman{page}}
+ #1
+ \newpage
+ \setcounter{page}{1}
+ \renewcommand{\thepage}{\arabic{page}}}
+%
+%Set name of appendix in toc
+%
+\renewcommand{\appendixtocname}{\appendixname}
+\noappendicestocpagenum
+%
+% Chapter adaptation
+%
+\renewcommand{\DOCH}{}
+\renewcommand{\DOTI}[1]{%
+\colorbox[gray]{0.8}{\parbox{\textwidth}{\centering\Huge\textbf{\thechapter.
+      \space#1}\par\nobreak}}\vskip 40pt\relax}
+\renewcommand{\DOTIS}[1]{%
+\colorbox[gray]{0.8}{\parbox{\textwidth}{\centering\huge\textbf{#1}%
+    \par\nobreak}}\vskip 40pt\relax}
+\renewcommand{\chaptermark}[1]{\markright{\textbf{\thechapter}\ ss\emph{#1}}{}}
+%
+% Maketitle adaptation
+%
+\newcommand\academy[1]{\gdef\@academy{#1}}
+\def\@academy{\@latex@warning@no@line{No \noexpand\academy given}}
+\newcommand\promotion[1]{\gdef\@promotion{#1}}
+\def\@promotion{\@latex@warning@no@line{No \noexpand\promotion given}}
+\newcommand\godparent[1]{\gdef\@godparent{#1}}
+\def\@godparent{\@latex@warning@no@line{No \noexpand\godparent given}}
+\newcommand\information[1]{\gdef\@information{#1}}
+\def\@information{\@latex@warning@no@line{No \noexpand\information given}}
+\newcommand\logo[1]{\gdef\@logo{#1}}
+\def\@logo{\@latex@warning@no@line{No \noexpand\logo given}}
+\newcommand\era[1]{\gdef\@era{#1}}
+\def\@era{\@latex@warning@no@line{No \noexpand\era given}}
+\newcommand\bama[1]{\gdef\@bama{#1}}
+\def\@bama{\@latex@warning@no@line{No \noexpand\bama given}}
+\newcommand{\academyfont}{\bfseries \fontsize{12pt}{16pt}\selectfont}
+\newcommand{\titlefont}{\bfseries \fontsize{18pt}{18pt}\selectfont}
+\newcommand{\defaultfont}{\fontsize{12pt}{16pt}\selectfont}
+\providecommand*{\sectfont}{\relax}
+\renewcommand\maketitle{
+%\newpage \thispagestyle{empty} \vspace*{\fill} \par % [Force a blank% page]
+%\vfil\null
+\begin{titlepage}
+\begin{adjustwidth}{-2.5cm}{-2cm}
+\defaultfont
+\begin{minipage}{.43\linewidth}
+\begin{center}
+{\academyfont \@academy}\\
+\@promotion\\
+\@godparent
+\end{center}
+\end{minipage}
+\hspace*{\stretch{1}}
+\begin{minipage}{2cm}
+\begin{center}
+\includegraphics[width=2cm]{\@logo}
+\end{center}
+\end{minipage}
+\hspace*{\stretch{1}}
+\begin{minipage}{.43\linewidth}
+\begin{center}
+{\academyfont \@era}\\
+\@bama~
+\end{center}
+\end{minipage}
+\end{adjustwidth}
+
+\vspace*{\stretch{2}}
+\begin{minipage}{\linewidth}
+\begin{center}
+\titlefont \@title
+\end{center}
+\end{minipage}
+
+\vspace*{\stretch{2}}
+\begin{minipage}{\linewidth}
+\begin{center}
+\@author
+\end{center}
+\end{minipage}
+
+\vspace*{\stretch{2}}
+\begin{minipage}[b]{\linewidth}
+\begin{flushright}
+\@information
+\end{flushright}
+\end{minipage}
+
+%\newpage \thispagestyle{empty} \vspace*{\fill} \par % [Force a blank% page]
+%\vfil\null
+
+\end{titlepage}
+
+%\setcounter{footnote}{0}%
+%\let\thanks\relax\let\maketitle\relax
+
+\gdef\@thanks{}
+\gdef\@author{}
+\gdef\@title{}
+}
+%
+\newenvironment{Bijlagen}{\begin{appendices}}{\end{appendices}}

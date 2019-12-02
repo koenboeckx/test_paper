@@ -1,0 +1,133 @@
+%
+% Main file for thesis RMA: versie Nederlands
+%
+\documentclass[a4paper,11pt,oneside]{book}
+%
+% begin DO NOT CHANGE
+%
+\usepackage[width=16cm, height=24.7cm, marginparwidth=2cm, left=3cm]{geometry}
+\usepackage{rmathesis}
+%\usepackage[dutch]{babel}
+\usepackage{makeidx}
+\usepackage[latin1]{inputenc}
+\usepackage{url}
+\usepackage{subfig}
+\usepackage{graphics}
+\usepackage{epstopdf}
+\usepackage{eurosym}
+\usepackage{siunitx}
+
+
+\usepackage{geometry}
+
+
+\newcommand{\gradencelsius}[1]{\SI{#1}{\degreeCelsius}}
+\newcommand{\graden}[1]{\SI{#1}{\degree}}
+\newcommand\procent{\,\%}
+\newcommand{\bedrageuro}[1]{\text{#1}~\text{euro}}
+\newcommand{\eurobedrag}[1]{\text{\EUR{}~#1}}
+\usepackage{float}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{alltt}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{pdfpages}
+\usepackage{pdfpages}
+%\renewcommand{\appendixpagename}{Bijlagen}
+%\renewcommand{\appendixtocname}{Bijlagen}
+% Footer layout
+\fancypagestyle{plain}{
+	\fancyhf{}
+	\fancyfoot[R]{\thepage}
+	\renewcommand{\footrulewidth}{0.4pt}
+	\renewcommand{\headrulewidth}{0pt} 
+}
+%
+\pagestyle{fancy}
+\renewcommand{\chaptermark}[1]{\leftmark{\thechapter.\ #1}{}}
+\fancyhf{} \rhead{\nouppercase{\leftmark}} \rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% by koen:
+\DeclareMathOperator*{\argmin}{arg\,min} % Jan Hlavacek
+\DeclareMathOperator*{\argmax}{arg\,max} % Jan Hlavacek
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage[options ]{algorithm2e} % see http://ctan.triasinformatica.nl/macros/latex/contrib/algorithm2e/doc/algorithm2e.pdf
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{hyperref} % dynamc links
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+\usepackage{epigraph} % quotes at first page
+\usepackage{minted} % include code: \begin{minted}{python}
+
+%
+% end DO NOT CHANGE
+%
+\makeindex
+%
+% titel
+%
+\academy{\underline{Royal Military Academy}}
+\promotion{Defence College}
+%\godparent{Peter}
+\era{Academic year 2019-2020}
+\bama{Formation Candidate Superior Officer\\
+$45^{th}$ session}
+\title{Developing Strategies with Reinforcement Learning}
+\author{by Cdt Koen BOECKX, ir}
+\logo{KMS}
+\information{
+Thesis FCOS Short Version\\
+under supervision of Mr Steven BEECKMAN, ir\\
+Brussels, 2020}
+%
+%
+%\includeonly{h1}
+%
+%
+\begin{document}
+	% Force blank page
+	%\newpage \thispagestyle{empty} \vspace*{\fill} \par
+	%\vfil\null
+\maketitle
+%
+%\include{voorwoord}
+%
+%
+\rome{%
+\tableofcontents \addcontentsline{toc}{chapter}{\contentsname}
+\listoffigures \addcontentsline{toc}{chapter}{\listfigurename}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}} 
+%\include{glossarium}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}} % format in header
+}
+%
+%
+% hier je hoofdstukken
+\include{ch0_introduction}
+\include{ch1}
+\include{ch2}
+\include{ch3}
+\include{ch4}
+\include{ch5}
+\include{conclusion}
+%\include{bronvermelding}
+%\include{index}
+\include{appendices}
+%
+\newpage\mbox{}\thispagestyle{empty}
+
+\addcontentsline{toc}{chapter}{References}
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\end{document}

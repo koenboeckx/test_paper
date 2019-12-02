@@ -1,0 +1,65 @@
+\chapter{Mathematical Modelling of the Battlefield}
+\label{ch:modelling}
+This thesis aims to be innovative in 2 ways:
+\begin{enumerate}
+    \item Create a mathematical model of the battlefield.
+     \item Asses whether state-of-the-art MARL techniques are able to develop interesting strategies in the framework of this model.
+\end{enumerate}
+This chapter will develop the first point.\\
+The goal of a mathematical - or algorithmic - model is twofold:
+\begin{enumerate}
+    \item Make explicit which simplifications we'll make, both about the terrain itself as about the agents that interact on this terrain.
+    \item Allow a computer to manipulate the model and simulate different situations and predict their outcomes.
+\end{enumerate}
+An important question is which level of detail we aspire to. As in all simulations, this must be a trade-off between making something as simple as possible to reduce computational complexity, and retain enough details to make it realistic and useful. To works towards this equilibrium, several versions of the model are developed with increasing levels of complexity.\\
+All forms of the game subscribe to the multi-agent formalism for Markov games, as defined in section \ref{sec:intro_marl}.
+
+%---------------------------------------------------------------------------------------
+\section{First Model}
+\label{sec:first_model}
+Two opposing players, $P_0$ and $P_1$, each command two agents, which we'll consider to be tanks. The game is played on a flat terrain without obstacles. The  size of the game board is small, typically $7$x$7$ or $11$x$11$. \\
+Both players have perfect knowledge of the entire game state $s_t$ at every time step $t$.
+Every tank $T_i$ is the same and has following individual state vector $s^i_t$:
+\begin{enumerate}
+    \item a position $(x,y)$ on the board,
+    \item a boolean value {\tt alive} that determines whether the agent in question is still alive,
+    \item an integer {\tt ammo} that specifies how many shots an agent has left,
+    \item an integer {\tt aim} that specifies whether the agent is aiming at one of the opposing agents.
+\end{enumerate}
+The global state $\bm{s_t}$ is then a tuple $(s_t^0, s_t^1, s_t^2, s_t^3) \in \bm{S}$ with $\bm{S}$ the set of global states.\\
+Each agent can choose among $8$ actions:
+\begin{enumerate}
+    \item {\tt do\_nothing}\\
+        As the name says, the agent does nothing and it's state vector $s^i$ doesn't change.
+    \item {\tt aim0} \\
+        Aims at the first tank of the opposing player and thus changes the {\tt aim} variable of it's state vector. The agent must be alive to be able to execute this action.
+    \item {\tt aim1} \\
+        Idem as above but aiming at the second tank of the opposing player.
+    \item {\tt fire} \\
+        Fire at the tank the agent is aiming at. This decreases the {\tt ammo} counter. The agent must be alive, have sufficient ammo and must be aiming before executing this action.\\
+        If the opposing tank is in range (determined by a parameter {\tt max\_range}), it's {\tt alive} indicator will be set to {\tt False}. This means that every shot will result in a killed opponent if in range.
+    \item 4 {\tt move} actions ({\tt up}, {\tt down}, {\tt left}, {\tt right})\\
+        The agent will move one step in the desired direction, unless he will drop of the board or comes too close to another agent\footnote{This is done to avoid that two agents will end up in the same spot since actions are, in the general case, executed simultaneously and if agents are too close, they can move to the same square.}.
+\end{enumerate}
+
+The joint action space $\mathcal{A}$ thus consists of all tuples of actions $(a_t^0, a_t^1, a_t^2, a_t^3)$ whereby the first two actions are executed by agents belonging to player $P_0$ and the two others by agents of $P_1$. Actions are executed simultaneously. A player wins when he has killed both tanks of the opposing player. Figure \ref{fig:game_visual} shows the standard visualization of the game, where tanks of the blue player $P_1$ are both dead (since they are "greyed out").
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=8cm]{images/game_visual.png}
+    \caption{Visualization of the simple version of the game}
+    \label{fig:game_visual}
+\end{figure}
+
+
+
+%---------------------------------------------------------------------------------------
+\section{Second Model}
+\begin{enumerate}
+    \item Asymmetric agents (tanks vs RPG)
+    \item More than 2x2 agents
+    \item Only local observations
+    \item Complex terrain
+    \item Larger state (e.g. fuel)
+    \item More complex firing (e.g. based on exponential distribution - (exponentially) decreasing probability based on distance between shooter and target)
+\end{enumerate}
