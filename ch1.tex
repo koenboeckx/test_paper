@@ -1,6 +1,6 @@
 \chapter{Algorithms}
 
-This chapter briefly explains the different algorithms used in this work. How they are used and what their purpose is for this thesis will be explained in chapter \ref{ch:impl_eval}.\\
+This chapter briefly explains the different algorithms used in this work. How they are used and what their purpose is for this thesis will be explained in chapter \ref{ch:impl_eval}.
 
 %----------------------------------------------------------------------------
 \section{Monte-Carlo Tree Search}
@@ -27,6 +27,7 @@ with:
     \item $c$ an exploration parameter (typically $2$).
 \end{enumerate}
 The left term expresses the expected value of action $i$ while the right term is an upper bound on the variance of this value. This right term decreases as the action is frequently chosen. Eventually, an other action $j$ that is less frequently chosen will take over because it's UCT becomes larger as both $N$ and $n_i$ increase.\\
+
 The entire MCTS algorithm is shown in figure \ref{fig:mcts_algo}. Each iteration updates the available information for the nodes that were selected during that iteration. The number of iterations is limited by the time horizon available for exploration. After that time exceeds, the best action is selected for the starting node of the different iterations.
 \begin{figure}[htp]
     \centering
@@ -65,7 +66,7 @@ The goal of RL is to choose a sequence of actions that maximizes the \emph{cumul
 \end{split}
 \label{eqn:cum_reward}
 \end{equation}
-where $0 \leqslant \gamma \leqslant 1$ is the \emph{discount factor}.
+where $0 \leqslant \gamma \leqslant 1$ is the \emph{discount factor}.\\
 
 A function $\pi(s)$ is called a \emph{policy} when it returns an action to take in state $s$. More generally, a policy can also return a probability distribution over actions. It that case it is denoted as $\pi(a|s)$ (read: the policy over actions $a$ given that we are in state $s$).\\
 
@@ -103,6 +104,7 @@ The most well-known of these  model-free methods is \emph{Q-learning} \cite{watk
     \label{eqn:q_learning}
 \end{equation}
 where $\alpha$ is the step size. The authors of \cite{watkins1992q} show that the empirical estimate $Q(S_t, A_t)$ converges to $q_{*}(s,a)$.\\
+
 The entire algorithm is shown in algorithm \ref{algo:q_learning}. Note the use of the current estimate $Q$ to select the next action $A$ to take.
 
 \begin{algorithm}[H]
@@ -187,7 +189,11 @@ Actor-Critic methods \cite{konda2000actor} are methods that use a parametric pol
                      &= \bm{\theta}_{t} + \alpha \,\big ( R_{t+1}+\gamma \hat V(S_{t+1}) - \hat V(S_t) \big) \,                                       \nabla_{\bm{\theta}} \ln \pi(A_t|S_t,\bm{\theta}) \\
     \end{split}
 \end{equation}
-This is the update rule for the actor; in parallel, the critic is trained to accurately estimate the value of the state $S_t$.
+This is the update rule for the actor; in parallel, the critic is trained to accurately estimate the value of the state $S_t$.\\
+The term $R_{t+1}+\gamma \hat V(S_{t+1}) - \hat V(S_t)$ is also called the \emph{advantage} of performing action $A_t$ in state $S_t$, since it compares the estimated value of the state where performing $A_t$ would bring us to the value of the current state $S_t$:
+$$
+\mathcal{A}(S_t, A_t) = R_{t+1}+\gamma \hat V(S_{t+1}) - \hat V(S_t)
+$$
 
 \begin{algorithm}[H]
 \SetAlgoLined
@@ -199,7 +205,7 @@ Initialize $\bm{\theta} \in \mathbb{R}^d$\\
  \While{S is not terminal}{
     Sample $A ~ \pi(a|s,\bm{\theta}) $ \\
     Take action $A$, observe next state $S'$ and reward $R$\\
-    $\delta \leftarrow R + \gamma \hat V(S', \bm{w}) - V(S, \bm{w})$\\
+    $\delta \leftarrow R + \gamma \hat V(S', \bm{w}) - V(S, \bm{w})$\\ % TODO: replace with \mathcal{A}(S_t, A_t) and verify if this is still ok
     $ \bm{w} \leftarrow \bm{w} + \alpha^{\bm{w}} I \delta \nabla_{\bm{w}} \hat V(S, \bm{w})$    ($\rightarrow$ Update rule for the \emph{critic})\\
     $\bm{\theta} \leftarrow \bm{\theta} + \alpha^{\bm{\theta}} I \delta \nabla_{\bm{\theta}} \ln \pi(A_t|S_t,\bm{\theta})$ ($\rightarrow$ Update rule for the \emph{actor}) \\
     $I \leftarrow \gamma I$, $S \leftarrow S'$
@@ -208,6 +214,12 @@ Initialize $\bm{\theta} \in \mathbb{R}^d$\\
  \caption{Actor-Critic Algorithm (from \cite{sutton2018reinforcement})}
  \label{algo:actor_critic}
 \end{algorithm}
+This method can be further improved by replacing the advantage $\mathcal{A}(S_t, A_t)$ by the \emph{Generalised Advantage Estimation} ${A}_t^{GAE(\gamma, \lambda)}$ \cite{schulman2015high}:
+\begin{equation}
+    \mathcal{A}_t^{GAE(\gamma, \lambda)} = \sum_{l=0}^{\infty}(\gamma \lambda)^l \delta_{t+l}
+\end{equation}
+with $\delta_{t+l} = R_{t+1}+\gamma \hat V(S_{t+1}) - \hat V(S_t)$.\\
+
 Another advantage of the Actor-Critic algorithm in \ref{algo:actor_critic} is that the update of the both estimators can be done after each new sample, while in REINFORCE we must first generate an entire episode before any learning can be done. Notice also that the step sizes for critic and actor (resp. $\alpha^{\bm{w}}$ and $\alpha^{\bm{\theta}}$) are different.\\
 
 TODO: discuss \textbf{Advantage function $A(s,u)$ and A2C \cite{mnih2013playing}}.
@@ -420,7 +432,7 @@ Another algorithm along the same line is independent Deep Policy Gradients, wher
 %----------------------------------------------------------------------------
 \subsection{COMA}
 \label{sec:intro_coma}
-\emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} is a recent multi-argent reinforcement learning algorithm based on actor-critic policy gradients. It uses the philosophy of \emph{centralised training of decentralised policies}, a multi-agent paradigm introduced by \cite{oliehoek2008optimal}. A decentralised policy is a policy in which each agent selects its own action based only on its local action-observation history. There is thus no way to coordinate any action with a team mate. This is a realistic point-of-view for our purposes, since we can assume that in critical situations, there will be no time for tanks to coordinate their actions. However, since learning the policies is done in a simulator, it is possible to use the entire state-space, including knowledge about teammates and their previous actions, to learn a strategy.\\
+\emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} is a recent multi-agent reinforcement learning algorithm based on actor-critic policy gradients. It uses the philosophy of \emph{centralised training of decentralised policies}, a multi-agent paradigm introduced by \cite{oliehoek2008optimal}. A decentralised policy is a policy in which each agent selects its own action based only on its local action-observation history. There is thus no way to coordinate any action with a team mate. This is a realistic point-of-view for our purposes, since we can assume that in critical situations, there will be no time for tanks to coordinate their actions. However, since learning the policies is done in a simulator, it is possible to use the entire state-space, including knowledge about teammates and their previous actions, to learn a strategy.\\
 
 %The general concept of centralised learning - decentralised execution is represented in figure \ref{fig:central_decentral}, where training (in green) relies on critics who have access to the full state information, but who are no longer available during execution (in red).
 %\begin{figure}[htp]

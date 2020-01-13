@@ -12,12 +12,14 @@ The goal of a mathematical - or algorithmic - model is twofold:
     \item Allow a computer to manipulate the model and simulate different situations and predict their outcomes.
 \end{enumerate}
 An important question is which level of detail we aspire to. As in all simulations, this must be a trade-off between making something as simple as possible to reduce computational complexity, and retain enough details to make it realistic and useful. To works towards this equilibrium, several versions of the model are developed with increasing levels of complexity.\\
+
 All forms of the game subscribe to the multi-agent formalism for Markov games, as defined in section \ref{sec:intro_marl}.
 
 %---------------------------------------------------------------------------------------
 \section{First Model}
 \label{sec:first_model}
-Two opposing players, $P_0$ and $P_1$, each command two agents, which we'll consider to be tanks. The game is played on a flat terrain without obstacles. The  size of the game board is small, typically $7$x$7$ or $11$x$11$. \\
+Two opposing players, $P_0$ and $P_1$, each command two agents, which we'll consider to be tanks. The game is played on a flat terrain without obstacles. The  size of the game board is small, typically $7$x$7$ or $11$x$11$.\\
+
 Both players have perfect knowledge of the entire game state $s_t$ at every time step $t$.
 Every tank $T_i$ is the same and has following individual state vector $s^i_t$:
 \begin{enumerate}
@@ -63,3 +65,11 @@ The joint action space $\mathcal{A}$ thus consists of all tuples of actions $(a_
     \item Larger state (e.g. fuel)
     \item More complex firing (e.g. based on exponential distribution - (exponentially) decreasing probability based on distance between shooter and target)
 \end{enumerate}
+
+%%%
+\textbf{TO DO}: discuss:
+\begin{itemize}
+    \item Sparse rewards
+    \item Delayed rewards
+    \item Credit assignment among agents
+\end{itemize}
