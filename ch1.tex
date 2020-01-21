@@ -126,7 +126,7 @@ Initialize $Q(s,a)$ for all $s \in \mathcal{S}$, all $a \in \mathcal{A}$\\
 %----------------------------------------------------------------------------
 \subsection{Policy Gradients}
 \label{sec:intro_policy_grads}
-The Q-learning family of RL algorithms estimates the state-action value $Q(s,a)$ and then uses this estimate to select the best available action with equation \ref{eq:optimal_policy}. An other family of algorithms, the \emph{policy gradient} (PG) methods, tries to find the optimal policy directly.\\
+The Q-learning family of RL algorithms estimates the state-action value $Q(s,a)$ and then uses this estimate to select the best available action with equation \ref{eq:optimal_policy}. An other family of algorithms, the \emph{policy gradient} (PG) methods \cite{sutton2000policy}, tries to find the optimal policy directly.\\
 
 For these algorithms, a policy $\pi(a|s)$ is determined by a parameter vector $\bm{\theta} \in \mathbb{R}^d$. The goal of the algorithm is to adjust $\bm{\theta}$ such that it maximizes a certain performance measure $J(\bm{\theta})$. In episodic MDP's, the performance measure will be the value of start state: $J(\bm{\theta}) = v_{\pi_{\bm{\theta}}}(s_0)$. Maximizing $J(\bm{\theta})$ is typically done taking a step in the direction of the gradient of  $J(\bm{\theta})$ with respect to $\bm{\theta}$, a procedure called \emph{gradient ascent}:
 \begin{equation}
@@ -142,6 +142,12 @@ Computing the gradient $\nabla_{\bm{\theta}} J(\bm{\theta})$ is non-trivial in g
     \label{eqn:pol_grad_theorem}
 \end{equation}
 with $\mu(s)$ the distribution of states under policy $\pi$. The last expression is the one based on samples drawn from interacting with the environment. This equation is very useful because it links the gradient of the performance measure $J(\bm{\theta})$ to the gradient of the policy $\pi(A_t|S_t, \bm{\theta})$ which can easily be computed (especially with automatic differentiation frameworks like {\tt PyTorch} - see section \ref{sec:intro_deep_rl}).\\
+It follows that the policy parameter vector $\bm{\theta}$ is updated according to following rule:
+\begin{equation}
+    \bm{\theta} \leftarrow \bm{\theta} + \alpha \, G_t \, \frac{\nabla_{\bm{\theta}} \pi(A_t|S_t, \bm{\theta})}{\pi(A_t|S_t, \bm{\theta})})
+    \label{eqn:reinforce_update}
+\end{equation}
+This expression has intuitive appeal: each increment of $\bm{\theta}$ is in the direction in parameter space that most increases the probability of taking action $A_t$ in state $S_t$. This direction is multiplied by the expected reward $G_t$ and divided by the action probability $\pi(A_t|S_t)$. The former causes the parameter to move most in directions that favor actions with higher returns. The latter makes sense because otherwise actions that are selected frequently have an unfair advantage.
 
 %Derivation of theorem:
 %\begin{equation}
@@ -154,7 +160,7 @@ with $\mu(s)$ the distribution of states under policy $\pi$. The last expression
 %    \end{split}
 %\end{equation}
 
-Implementing equation \ref{eqn:pol_grad_theorem} directly leads to the simplest PG algorithm, REINFORCE \cite{williams1992reinforce}:
+Implementing equation \ref{eqn:reinforce_update} directly leads to the simplest PG algorithm, REINFORCE \cite{williams1992reinforce}:
 
 \begin{algorithm}[H]
 \SetAlgoLined
