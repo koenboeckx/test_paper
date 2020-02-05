@@ -1,12 +1,16 @@
 \chapter{Introduction}
 
 \epigraph{We humans tend to overestimate AI advances and underestimate the complexity of our own intelligence.} {Melanie Mitchell}
-
-The goal of this thesis is twofold. Firstly, an algorithmic model of a battlefield is developed. As all models, this one will be a be a big simplification of reality, and I'm fully aware many criticisms about design choices can be made. However, care has been taken to create something that is both useful and exploitable; useful because it captures vital elements of reality; exploitable because it is simple enough to feed it to some state-of-the-art algorithms in the domain of multi-agent learning.\\
-
+This thesis was realized as part of the \emph{Intelligent Recognition Information System} (IRIS) project in which the CISS department of the RMA participates. This project, piloted by John Cockerill Defence, aims to develop an integrated software system to help crews in armoured vehicles with the execution of their mission. To accomplish this, a functional pipeline has been developed:
+\begin{itemize}
+    \item By using the image and thermal sensors on board of the vehicle, automatically detect and recognize objects in the terrain.
+    \item Identify potential treats among the recognized objects and classify them according to their threat level and the danger they pose.
+    \item Develop a strategy (a sequence of actions to take) to counteract the threat(s) and propose these actions to the crew.
+\end{itemize}
+This thesis explores potential solutions for the last step and has a double goal.\\
+Firstly, an algorithmic model of a battlefield is developed. Both the actors in terrain like the own and enemy troops as the terrain itself will be modeled. As all models, this one will be a be a large simplification of reality.  Care has been taken to create something that is both useful and exploitable; useful because it captures vital elements of reality; exploitable because it is simple enough to feed it to some state-of-the-art algorithm in the domain of multi-agent learning.\\
 A second goal of this thesis is to assess, using this model of the battlefield, whether we can develop strategies using multi-agent algorithms, based on recent developments in deep learning and reinforcement learning.\\
-
-\textbf{Link to research:} establish position of this thesis in the CMI pipeline (with nice sketch from real environment to mathematical battlefield model)\\
+The thesis is structured around these two goals. In chapter \ref{ch:algorithms} the different algorithms will be developed. This chapter gives a brief overview of reinforcement learning and deep learning before treating the algorithms that can be used in a multi-agent setting. Chapter \ref{ch:modelling} explains how the modelling of the battlefield is done and which simplifications are made. Combining algorithms and models is done in chapter \ref{ch:impl_eval}, where the different results will be discussed. Chapter \ref{ch:future_work} discusses potential directions for further research and conclusions are drawn in chapter \ref{ch:conclusion}.
 
 In the interest of readability, I've avoided to use any computer code in this thesis (except for the appendices). However, all results are the consequence of a significant coding effort in {\tt Python 3} and {\tt PyTorch}. This code can be found on the thesis' Github page: \url{https://github.com/koenboeckx/VKHO}.
 
