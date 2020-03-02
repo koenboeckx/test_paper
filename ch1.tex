@@ -2,7 +2,7 @@
 \label{ch:algorithms}
 
 This chapter briefly explains the different algorithms used in this work. How they are used and what their purpose is for this thesis will be explained in chapter \ref{ch:impl_eval}.\\
-All the algorithms are part of a family of algorithms that can be viewed as \emph{machine learning} (ML). In stead of telling a computer what to do to perform a specific task by using explicit instructions, they rely on patterns and inference instead and learn the correct behavior. ML is traditionally divided into 3 subcategories:
+All the algorithms are part of a family of algorithms that can be viewed as \emph{machine learning} (ML). Instead of telling a computer what to do to perform a specific task by using explicit instructions, they rely on patterns and inference instead and learn the correct behavior. ML is traditionally divided into 3 subcategories:
 \begin{itemize}
     \item \emph{Supervised learning}, where we feed the algorithm with both the input and the correct output so that it can learn based on the predicted and correct output,
     \item \emph{Unsupervised learning}, where the algorithms learns to classify items based on their underlying distribution alone (and thus without being given the correct answer),
@@ -35,7 +35,7 @@ with:
     \item $N$ the number of times the parent node was visited during selection.
     \item $c$ an exploration parameter (typically $2$).
 \end{enumerate}
-The left term expresses the expected value of action $i$ while the right term is an upper bound on the variance of this value. This right term decreases as the action is frequently chosen. Eventually, an other action $j$ that is less frequently chosen will take over because it's UCT becomes larger as both $N$ and $n_i$ increase.\\
+The left term expresses the expected value of action $i$ while the right term is an upper bound on the variance of this value. This right term decreases as the action is frequently chosen. Eventually, an other action $j$ that is less frequently chosen will take over because its UCT becomes larger as both $N$ and $n_i$ increase.\\
 
 The entire MCTS algorithm is shown in figure \ref{fig:mcts_algo}. Each iteration updates the available information for the nodes that were selected during that iteration. The number of iterations is limited by the time horizon available for exploration. After that time exceeds, the best action is selected for the starting node of the different iterations.
 \begin{figure}[htp]
@@ -47,7 +47,7 @@ The entire MCTS algorithm is shown in figure \ref{fig:mcts_algo}. Each iteration
 
 %----------------------------------------------------------------------------
 \subsection{MCTS for two-player games}
-The previous section describes how MCTS can be used for a single player while traversing a game tree. The question remains how this MCTS player should anticipate which moves his opponent will make while selecting nodes in search for a leaf node. The most obvious way of doing this is working with a turn-based game and simultaneously training another MCTS player on this game. We can then use the game play of the other player to simulate the opponent. 
+The previous section describes how MCTS can be used for a single player while traversing a game tree. The question remains how this MCTS player should anticipate which moves his opponent will make while selecting nodes in search for a leaf node. The most obvious way of doing this is working with a turn-based game and simultaneously training another MCTS player on this game. We can then use the gameplay of the other player to simulate the opponent. 
 
 \begin{figure}[htp]
     \centering
@@ -59,7 +59,7 @@ The previous section describes how MCTS can be used for a single player while tr
 %----------------------------------------------------------------------------
 \section{Reinforcement Learning}
 \label{sec:intro_rl}
-Reinforcement Learning (RL) is a form of Machine Learning where an agent learns what to do in order to maximize a numerical reward signal \cite{sutton2018reinforcement}. RL uses a \emph{Markov Decision Process} (MDP) as the formal framework to solve a sequential decision making problem. In this framework, the learner and decision maker is the \emph{agent} who interacts with the \emph{environment} at discrete time steps $t=0, 1, 2, \ldots$. At each time step $t$, the agent receives a representation of the environment's \emph{state} $S_t$\footnote{A note on notation: when we want to represent a generic state, action or reward, a lower case letter will be used ($r$, $a$, $r$). When we refer to a specific instance, e.g. obtained through sampling, we use capital letters ($S_t$, $A_t$, $R_t$) with an index that refers to the time instant when this sample was generated.}. Based on this state information, the agent decides which action $A_t$ to take and sends this action to the environment. The environment changes its internal state to a new state $S_{t+1}$ and sends a reward signal $R_{t+1} \in \mathbb{R}$ back to the agent. This reward gives an indication how good the chosen action was. The Markov decision process is represented in figure \ref{fig:mdp}.\\
+Reinforcement Learning (RL) is a form of Machine Learning where an agent learns what to do in order to maximize a numerical reward signal \cite{sutton2018reinforcement}. RL uses a \emph{Markov Decision Process} (MDP) as the formal framework to solve a sequential decision making problem. In this framework, the learner and decision maker is the \emph{agent} who interacts with the \emph{environment} at discrete time steps $t=0, 1, 2, \ldots$. At each time step $t$, the agent receives a representation of the environment's \emph{state} $S_t$\footnote{A note on notation: when we want to represent a generic state, action or reward, a lower case letter will be used ($s$, $a$, $r$). When we refer to a specific instance, e.g. obtained through sampling, we use capital letters ($S_t$, $A_t$, $R_t$) with an index that refers to the time instant when this sample was generated.}. Based on this state information, the agent decides which action $A_t$ to take and sends this action to the environment. The environment changes its internal state to a new state $S_{t+1}$ and sends a reward signal $R_{t+1} \in \mathbb{R}$ back to the agent. This reward gives an indication how good the chosen action was. The Markov decision process is represented in figure \ref{fig:mdp}.\\
 
 
 \begin{figure}[htp]
