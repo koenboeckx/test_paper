@@ -6,7 +6,7 @@ All the algorithms are part of a family of algorithms that can be viewed as \emp
 \begin{itemize}
     \item \emph{Supervised learning}, where we feed the algorithm with both the input and the correct output so that it can learn based on the predicted and correct output,
     \item \emph{Unsupervised learning}, where the algorithms learns to classify items based on their underlying distribution alone (and thus without being given the correct answer),
-    \item \emph{Reinforcement learning} which will be explored in some detail in section \ref{sec:intro_rl}
+    \item \emph{Reinforcement learning}, which will be explored in some detail in section \ref{sec:intro_rl}.
 \end{itemize}
 
 
@@ -64,7 +64,7 @@ Reinforcement Learning (RL) is a form of Machine Learning where an agent learns 
 
 \begin{figure}[htp]
     \centering
-    \includegraphics[width=8cm]{images/mdp.png}
+    \includegraphics[width=10cm]{images/mdp.png}
     \caption{The agent-environment interface of an MDP (reproduced from \cite{sutton2018reinforcement})}
     \label{fig:mdp}
 \end{figure}
@@ -103,12 +103,12 @@ with $p(s', r | s, a)$ the probability of receiving reward $r$ and moving to sta
     \label{eq:optimal_policy}
 \end{equation}
 
-Several classical algorithms exist to solve this problem. However, they all assume that the state-transition probabilities $p(s', r | s, a)$ are known. Typically this is not the case and these probabilities have to be estimated. Methods that have no model of the transition probabilities are called \emph{model-free}. These models learn from by interacting with the environment by creating \emph{trajectories} of successive states, actions and rewards:
+Several classical algorithms exist to solve this problem. However, they all assume that the state-transition probabilities $p(s', r | s, a)$ are known. Typically this is not the case and these probabilities have to be estimated. Methods that have no model of the transition probabilities are called \emph{model-free}. These models learn by interacting with the environment by creating \emph{trajectories} of successive states, actions and rewards:
 $$
 \ldots, S_{t-1}, A_{t-1}, R_t, S_t, A_t, R_{t+1}, S_{t+1}, \ldots
 $$
 \\
-The goal of RL is to learn the optimal policy $\pi_{*}(s)$. To accomplish this, two paradigms exist: value approximation, where we first approximate $Q(s,a)$ and then derive the policy according to \ref{eq:optimal_policy}, and policy approximation, where we derive the optimal policy $\pi_{*}(a|s)$ directly. Both a paradigms are explained below.
+The goal of RL is to learn the optimal policy $\pi_{*}(s)$. To accomplish this, two paradigms exist: \emph{value approximation}, where we first approximate $Q(s,a)$ and then derive the policy according to \ref{eq:optimal_policy}, and \emph{policy approximation}, where we derive the optimal policy $\pi_{*}(a|s)$ directly. Both paradigms are explained below.
 %----------------------------------------------------------------------------
 \subsection{Value approximation: Q-learning}
 \label{sec:intro_q_learning}
@@ -299,10 +299,9 @@ with $N$ the number of samples.
 While this technique only finds a local rather than a global minimum of the loss function, it has been shown that the resulting optimum works well in practice \cite{bottou2010large}.  However, if the local error surface is not well conditioned (i.e. there is a large difference in eigenvalues of the Hessian), convergence to the local minimum can be slow. A popular method to speed up convergence is SGD with \emph{momentum} \cite{qian1999momentum}, where the gradient that is used for the update is a moving average of the previous immediate gradients:
 
 \begin{align*}
-        V_t &= \beta \, V_{t-1} + (1-\beta) \sum_{i=1}^{N} \nabla_{\bm{\theta}} J_{i}(\bm{\theta})\\
+        V_t &= \beta \, V_{t-1} + (1-\beta) \sum_{i=1}^{N} \nabla_{\bm{\theta}} J_{i}(\bm{\theta}) \quad \quad 0 \leq \beta < 1\\
         \bm{\theta}_{t+1} &= \bm{\theta}_{t} - \alpha V_t
 \end{align*}
-with $0 \leq \beta < 1$.\\
 A popular implementation of this paradigm is \emph{Adam} \cite{kingma2014adam}, an algorithm that uses momentum with an adaptive step size. This is the optimization algorithm that will be used throughout this thesis.
 
 %----------------------------------------------------------------------------
