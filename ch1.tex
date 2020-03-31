@@ -476,7 +476,7 @@ A sufficient condition to realize this is to enforce a monotonicity constraint o
     \label{eqn:qmix}
     \frac{\partial Q_{tot}}{\partial Q_i} \geq 0, \forall i
 \end{equation}
-QMIX does this by representing each $ Q_i$ by an \emph{agent network}. All these $Q_i$'s are combined into $Q_{tot}$ with a \emph{mixing network} in a non-linear way (contrary to VDN) but enforces conditions \ref{eqn:qmix} by forcing the weights of the mixing network to be positive. The details of these networks and how they interact is shown in figure \ref{fig:qmix_structure}.\\
+QMIX does this by representing each $Q_i$ by an \emph{agent network}. All these $Q_i$'s are combined into $Q_{tot}$ with a \emph{mixing network} in a non-linear way (contrary to VDN) but enforces conditions \ref{eqn:qmix} by forcing the weights of the mixing network to be positive. The details of these networks and how they interact is shown in figure \ref{fig:qmix_structure}.\\
 
 \begin{figure}[htp]
     \centering
@@ -485,9 +485,11 @@ QMIX does this by representing each $ Q_i$ by an \emph{agent network}. All these
     \label{fig:qmix_structure}
 \end{figure}
 
-Figure (b) is the global structure, where the results of several agent networks are combined in a mixing network. Figure (c) shows an agent network. Once again, a recurrent net (a GRU) is used to track the agent's trajectory. The result is the "best" Q-value available in this state, determined by $\epsilon$-greedy selection. Figure (a) shows the mixing network. Small hypernetworks (in red) take the state $s$ and produce the weights $W_k$ of the network. They consists of a single linear layer and an absolute activation function $|\cdot|$ which ensures that these weights are always positive.
+Figure (b) is the global structure, where the results of several agent networks are combined in a mixing network. Figure (c) shows an agent network. Once again, a recurrent net (a GRU) is used to track the agent's trajectory. The result is the "best" Q-value available in this state, determined by $\epsilon$-greedy selection. Figure (a) shows the mixing network. Small hypernetworks (in red) take the state $s$ and produce the weights $W_k$ of the network. They consists of a single linear layer and an absolute activation function $|\cdot|$ which ensures that these weights are always positive.\\
+The advantages of this algorithm is that it combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. The goal is to prefer actions that are good for the collective in stead of just being good for individual agents. This could then result in emerging strategies that require interaction between agents. During training, this combined $Q_{tot}$ is computed by taking all state information into account. Several other algorithms that try to offer these advantages have been developed. The most prominent ones of those algorithms is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy-gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
 
 %----------------------------------------------------------------------------
+\begin{comment}
 \subsection{COMA}
 \label{sec:intro_coma}
 \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} is a recent multi-agent reinforcement learning algorithm based on actor-critic policy gradients. It uses the philosophy of \emph{centralised training of decentralised policies}, a multi-agent paradigm introduced by \cite{oliehoek2008optimal}. A decentralised policy is a policy in which each agent selects its own action based only on its local action-observation history. There is thus no way to coordinate any action with a team mate. This is a realistic point-of-view for our purposes, since we can assume that in critical situations, there will be no time for tanks to coordinate their actions. However, since learning the policies is done in a simulator, it is possible to use the entire state-space, including knowledge about teammates and their previous actions, to learn a strategy.\\
@@ -521,3 +523,4 @@ Figure (b) shows the internal structure of the Actor. The Actor is a GRU, a spec
 
 The Critic (figure (c)) takes as input not only the observation $o_t^i$ and the agent's action $a$, but also the complete state information $s_t$ and the previous actions $\bm{u}_{t-1}$ and especially the actions of other agents $\bm{u}_t^{-i}$ at time $t$. The output is list of $Q$-values, one for each of the agent's actions $a$: $\{Q(u^i=1, \bm{u}_t^{-i}) \ldots  Q(u^i=|U|, \bm{u}_t^{-i}) \}$ with $|U|$ the size of the action space. Once these values are available, the counterfactual advantage $A^i(s, \bm{u})$ can thus be efficiently computed with expression \ref{eqn:coma}.
 
+\end{comment}

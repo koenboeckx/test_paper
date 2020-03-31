@@ -12,7 +12,6 @@ The goal of a mathematical - or algorithmic - model is twofold:
     \item Allow a computer to manipulate the model and simulate different situations and predict their outcomes.
 \end{enumerate}
 An important question is which level of detail we aspire to. As in all simulations, this must be a trade-off between making something as simple as possible to reduce computational complexity, and retain enough details to make it realistic and useful. To works towards this equilibrium, several versions of the model are developed with increasing levels of complexity.\\
-
 All forms of the game subscribe to the multi-agent formalism for Markov games, as defined in section \ref{sec:intro_marl}.
 
 %---------------------------------------------------------------------------------------
@@ -20,8 +19,7 @@ All forms of the game subscribe to the multi-agent formalism for Markov games, a
 \label{sec:first_model}
 Two opposing players, $P_0$ and $P_1$, each command two agents, which we'll consider to be tanks. The game is played on a flat terrain without obstacles. The  size of the game board is small, typically $7$x$7$ or $11$x$11$.\\
 
-Both players have perfect knowledge of the entire game state $s_t$ at every time step $t$.
-Every tank $T_i$ is the same and has following individual state vector $s^i_t$:
+This game offers perfectly symmetrical capacities to both teams: every tank $T_i$ is the same and has following individual state vector $s^i_t$:
 \begin{enumerate}
     \item a position $(x,y)$ on the board,
     \item a boolean value {\tt alive} that determines whether the agent in question is still alive,
@@ -41,10 +39,18 @@ Each agent can choose among $8$ actions:
         Fire at the tank the agent is aiming at. This decreases the {\tt ammo} counter. The agent must be alive, have sufficient ammo and must be aiming before executing this action.\\
         If the opposing tank is in range (determined by a parameter {\tt max\_range}), it's {\tt alive} indicator will be set to {\tt False}. This means that every shot will result in a killed opponent if in range.
     \item 4 {\tt move} actions ({\tt up}, {\tt down}, {\tt left}, {\tt right})\\
-        The agent will move one step in the desired direction, unless he will drop of the board or comes too close to another agent\footnote{This is done to avoid that two agents will end up in the same spot since actions are, in the general case, executed simultaneously and if agents are too close, they can move to the same square.}.
+        The agent will move one step in the desired direction, unless he will drop of the board or move to a tile occupied by an other agent.
+        %or comes too close to another agent\footnote{This is done to avoid that two agents will end up in the same spot since actions are, in the general case, executed simultaneously and if agents are too close, they can move to the same square.}.
 \end{enumerate}
 
-The joint action space $\mathcal{A}$ thus consists of all tuples of actions $(a_t^0, a_t^1, a_t^2, a_t^3)$ whereby the first two actions are executed by agents belonging to player $P_0$ and the two others by agents of $P_1$. Actions are executed simultaneously. A player loses when both his tanks are dead or out of ammo. While the out-of-ammo criterion is a realistic assumption, it also avoids long games without end and thus speeds up learning. Additionally, a small penalty is introduce for every step an agent takes. This should induce an agent to prefer shorter episodes. Experience has shown that this addition does indeed shorten the average game time and speeds up learning compared to no penalty. Additionally, at the reset of a game, all agents are placed in the same initial position.\\
+The joint action space $\mathcal{A}$ thus consists of all tuples of actions $(a_t^0, a_t^1, a_t^2, a_t^3)$ whereby the first two actions are executed by agents belonging to player $P_0$ and the two others by agents of $P_1$. Actions are executed simultaneously. A player loses when both his tanks are dead or out of ammo. While the out-of-ammo criterion is a realistic assumption, it also avoids long games without end and thus speeds up learning. Additionally, a small penalty is introduced for every step an agent takes. This should induce an agent to prefer shorter episodes. Experience has shown that this addition does indeed shorten the average game time and speeds up learning compared to no penalty. Additionally, at the reset of a game, all agents are placed in the same initial position.\\
+All agents receive an observation from the environment that is based on the global state vector. An observation $o^i_t$ for agent $i$ consists of the following information:
+\begin{itemize}
+    \item His own position, remaining ammo and, if applicable, the opposing agent he is aiming at.
+    \item The relative position of his team mate and of the opposing agents, if they are still alive.
+\end{itemize}
+This implies that an agent does not know the ammo situation of other agents nor if opposing agents are aiming. This is a design choice to mimic a realistic situation.\\
+
 Figure \ref{fig:game_visual} shows the standard visualization of the game, where tanks of the blue player $P_1$ are both dead (since they are "greyed out").
 
 \begin{figure}[htp]
@@ -58,14 +64,16 @@ Figure \ref{fig:game_visual} shows the standard visualization of the game, where
 
 %---------------------------------------------------------------------------------------
 \section{Second Model}
+Several extension to the simple model have been considered. These proposed extension include:
 \begin{enumerate}
-    \item Asymmetric agents (tanks vs RPG)
+    \item Using asymmetric agents with different capabilities (e.g. tanks vs. warriors with RPG)
     \item More than 2x2 agents
-    \item Only local observations
-    \item Complex terrain
-    \item Larger state (e.g. fuel)
-    \item More complex firing (e.g. based on exponential distribution - (exponentially) decreasing probability based on distance between shooter and target)
+    \item Complex terrain where both visibility and mobility are blocked by obstacles.
+    \item Larger state space, where e.g. fuel is limited.
+    \item More complex firing probability, e.g. an exponentially decreasing probability based on distance between shooter and target.
 \end{enumerate}
+In the end time and effort are limited, thus only the second and third option were retained. The second model is a model where the agent all have the same capabilities but the number of agents can be freely chosen. Furthermore, the terrain consists of free space and obstacles that block both the movement and the line-of-sight of the agents. A blocked line-of-sight means that firing is not allowed.\\
+Just as before, each agent receives
 
 %%%
 \textbf{TO DO}: discuss:
