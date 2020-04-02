@@ -38,8 +38,8 @@ Each agent can choose among $8$ actions:
     \item {\tt fire} \\
         Fire at the tank the agent is aiming at. This decreases the {\tt ammo} counter. The agent must be alive, have sufficient ammo and must be aiming before executing this action.\\
         If the opposing tank is in range (determined by a parameter {\tt max\_range}), it's {\tt alive} indicator will be set to {\tt False}. This means that every shot will result in a killed opponent if in range.
-    \item 4 {\tt move} actions ({\tt up}, {\tt down}, {\tt left}, {\tt right})\\
-        The agent will move one step in the desired direction, unless he will drop of the board or move to a tile occupied by an other agent.
+    \item 4 {\tt move} actions ({\tt north}, {\tt south}, {\tt east}, {\tt west})\\
+        The agent will move one step in the desired direction, unless he will drop of the board or tries to move to a tile occupied by an other agent.
         %or comes too close to another agent\footnote{This is done to avoid that two agents will end up in the same spot since actions are, in the general case, executed simultaneously and if agents are too close, they can move to the same square.}.
 \end{enumerate}
 
@@ -64,7 +64,7 @@ Figure \ref{fig:game_visual} shows the standard visualization of the game, where
 
 %---------------------------------------------------------------------------------------
 \section{Second Model}
-Several extension to the simple model have been considered. These proposed extension include:
+The goal of extending the model is to make it more realistic. Several extension to the simple model have been considered. These proposed extension include:
 \begin{enumerate}
     \item Using asymmetric agents with different capabilities (e.g. tanks vs. warriors with RPG)
     \item More than 2x2 agents
@@ -72,8 +72,13 @@ Several extension to the simple model have been considered. These proposed exten
     \item Larger state space, where e.g. fuel is limited.
     \item More complex firing probability, e.g. an exponentially decreasing probability based on distance between shooter and target.
 \end{enumerate}
-In the end time and effort are limited, thus only the second and third option were retained. The second model is a model where the agent all have the same capabilities but the number of agents can be freely chosen. Furthermore, the terrain consists of free space and obstacles that block both the movement and the line-of-sight of the agents. A blocked line-of-sight means that firing is not allowed.\\
-Just as before, each agent receives
+Since time was limited, only the second and third option were retained; the others will be explored in future research. This means that the second model is a model where the agent all have the same capabilities but the number of agents can be freely chosen. Furthermore, the terrain consists of free space and obstacles that block both the movement and the line-of-sight of the agents. A blocked line-of-sight means that firing is not allowed.\\
+Just as before, each agent receives an observation from the environment which is derived from the global state. In this case, the agent receives:
+\begin{itemize}
+    \item His own position, ammo and aim
+    \item The relative position of the other agents
+\end{itemize}
+such as before in the simple model. This observation is extended with information about which enemy agent is visible and can thus be fired at. This means that the agents don't receive information about the terrain directly; the only consequence of the terrain is implicitly captured in this visibility information. Adding more terrain information will be part of future research.
 
 %%%
 \textbf{TO DO}: discuss:

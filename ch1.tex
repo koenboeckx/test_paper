@@ -77,7 +77,8 @@ The goal of RL is to choose a sequence of actions that maximizes the \emph{cumul
 \end{split}
 \label{eqn:cum_reward}
 \end{equation}
-where $0 \leqslant \gamma \leqslant 1$ is the \emph{discount factor}.\\
+where $0 \leqslant \gamma \leqslant 1$ is the \emph{discount factor}. This discount factor is a way to express that we are less certain about obtaining these future rewards. If $\gamma = 1$, all rewards, present and future, have the same impact. If $\gamma=0$, we only consider the current reward. Typically, $\gamma$ is chosen to be a bit less than $1$.
+You could also interpret $1-\gamma$ as the probability to end the episode at any stage, i.e. at every step we have a chance of $1-\gamma$ to jump to a terminal state. \\
 
 A function $\pi(s)$ is called a \emph{policy} when it returns an action $a$ to take in state $s$. More generally, a policy can also return a probability distribution over actions. In that case it is denoted as $\pi(a|s)$ (read: the policy over actions $a$ given that we are in state $s$).\\
 
@@ -250,6 +251,7 @@ The RL algorithms described in the previous section use function approximators t
 
 %------------------------------------------------------------------------------------------------------
 \subsection{Deep Learning}
+This section briefly describes the essential aspects of deep learning needed to understand this thesis.
 \label{sec:deep_learning}
 
 \subsubsection{Neural Networks}
@@ -294,17 +296,18 @@ In order to adjust the network weights, the most commonly used procedure is \emp
     \label{eqn:sgd}
     \bm{\theta}_{t+1} = \bm{\theta}_{t} - \alpha \frac{1}{N} \sum_{i=1}^{N} \nabla_{\bm{\theta}} J_{i}(\bm{\theta})
 \end{equation}
-with $N$ the number of samples.
+with $N$ the number of samples. The step size $\alpha$ is in this context often called the \emph{learning rate} and in the future we will refer to it by this name.
 
-While this technique only finds a local rather than a global minimum of the loss function, it has been shown that the resulting optimum works well in practice \cite{bottou2010large}.  However, if the local error surface is not well conditioned (i.e. there is a large difference in eigenvalues of the Hessian), convergence to the local minimum can be slow. A popular method to speed up convergence is SGD with \emph{momentum} \cite{qian1999momentum}, where the gradient that is used for the update is a moving average of the previous immediate gradients:
+While this technique only finds a local rather than a global minimum of the loss function, it has been shown that the resulting optimum works well in practice \cite{bottou2010large}.  However, if the local error surface is not well conditioned\footnote{Technically, this mean that there is a large difference in eigenvalues of the Hessian}, convergence to the local minimum can be slow. A popular method to speed up convergence is SGD with \emph{momentum} \cite{qian1999momentum}, where the gradient that is used for the update is a moving average of the previous immediate gradients:
 
 \begin{align*}
         V_t &= \beta \, V_{t-1} + (1-\beta) \sum_{i=1}^{N} \nabla_{\bm{\theta}} J_{i}(\bm{\theta}) \quad \quad 0 \leq \beta < 1\\
         \bm{\theta}_{t+1} &= \bm{\theta}_{t} - \alpha V_t
 \end{align*}
-A popular implementation of this paradigm is \emph{Adam} \cite{kingma2014adam}, an algorithm that uses momentum with an adaptive step size. This is the optimization algorithm that will be used throughout this thesis.
+A popular implementation of this paradigm is \emph{Adam} \cite{kingma2014adam}, an algorithm that uses momentum with an adaptive learning rate. This is the optimization algorithm that will be used throughout this thesis.
 
 %----------------------------------------------------------------------------
+\begin{comment}
 \subsubsection{Convolutional Neural Networks}
 A \emph{Convolutional Neural Network} (CNN) \cite{lecun1989backpropagation} is a specific instance of an artificial neural network where several square windows `glide` over an image and at each position the covered pixels are multiplied by the window weights and summed. This operation is called a \emph{convolution}. These kind of networks are very well suited for processing images since they implicitly capture that the salient characteristics (forms, colors, texture, \ldots) of objects in images are invariant to translations.\\
 
@@ -318,10 +321,11 @@ The typical structure of a CNN used for classification is shown in figure \ref{f
 \end{figure}
 
 After the convolutions typically follows a subsampling phase, where for a window of pixels only the one with the maximum value is retained (\emph{max-pooling}) and which will reduce the computational overhead. Another sequence of convolutions and subsampling leads to a final set of feature maps. The idea is to learn more complex features as we move up in to hierarchy, going form edges to textures to parts of objects to complete objects. These feature maps are then reduced to a single vector which will be processed by a more traditional multi-layer network (a sequence of fully-connected layers).\\
-
+\end{comment}
 %----------------------------------------------------------------------------
 \subsubsection{Recurrent Neural Networks}
-Another type of neural network is a \emph{Recurrent Neural Network} (RNN), which is mostly used to model sequential inputs. The output of the network is at the next time step fed back to the input (after multiplication with weights $V$ and activation), as shown in the left image of figure \ref{fig:rnn}. To analyze these kind of networks, they are "unfolded" so that each step is represented by a separate but identical network (the right part of figure \ref{fig:rnn}). The internal state vector $\bm{h}$ (also called the \emph{hidden state}) is then at each time step seen an a new "input" $\bm{h}_t$ to the network at time $t$, just as the true input $\bm{x}_t$.\\
+A special type of neural network is a \emph{Recurrent Neural Network} (RNN), which is mostly used to model sequential inputs. It is a normal neural net where the network output is at the next time step fed back to the input (after multiplication with weights $V$ and activation), as shown in the left image of figure \ref{fig:rnn}.\\
+To analyze these kind of networks, they are "unfolded" so that each step is represented by a separate but identical network (the right part of figure \ref{fig:rnn}). The internal state vector $\bm{h}$ (also called the \emph{hidden state}) is then at each time step seen an a new "input" $\bm{h}_t$ to the network at time $t$, just as the true input $\bm{x}_t$.\\
 \begin{figure}[htp]
     \centering
     \includegraphics[width=14cm]{images/rnn.png}
@@ -414,7 +418,7 @@ Similarly, the critic will also be represented as a neural network. Typically, b
 \end{figure}
 
 Just as in DQN, there is a high probability that an agent will converge to a policy that is locally optimal but is far from the global optimum. In other words, the policy space wasn't explored enough. In DQN, this can be solved by gradually decreasing the $\epsilon$-parameter in $\epsilon$-greedy action selection. While similar methods can be used for DPG, a better method is available. By adding the \emph{entropy}\footnote{The entropy of a probability distribution equals $H(\pi) = -\sum_{a} \pi(a|s) \log \pi(a|s)$. It is maximum when $\pi$ is uniform and minimal when all probability mass is placed on a single action.} $H(\pi)$ to the loss-function, we can penalize policies where the agent is too sure of certain actions, effectively steering the agent to policies that improve exploration of the policy space.\\
-In the computational graph of a network of type \ref{fig:common_body}, we define only a single loss function and a single optimizer that will use this loss function to update the different weights. The loss function thus becomes the sum of three parts:
+In the computational graph of a network of type of figure \ref{fig:common_body}, we define only a single loss function and a single optimizer that will use this loss function to update the different weights. The loss function thus becomes the sum of three parts:
 \begin{itemize}
     \item a term to simulate the step in the direction of an improved policy:\\ \begin{equation} \mathcal{L}_{pol} = -\log(A_t|S_t) \mathcal{A}(S_t, A_t) \end{equation} Mind the minus sign because we want to increase the value of the policy as the loss is minimized.
     \item a term to make the critic converge to a correct estimate of the value of the states:\\
@@ -426,7 +430,7 @@ The total loss is the combination of these three loss functions:
 \mathcal{L} = \mathcal{L}_{pol} + \mathcal{L}_{val} + \mathcal{L}_{ent} 
 \end{equation} 
 
-The policies in the preceding paragraphs were conditioned on the current state $S_t$. The expressive power of these policy networks increases when we could condition on the entire set of previously seen observations, namely the state trajectory $\tau$. This is done implicitly by using recurrent networks like a GRU, where the hidden state encodes the information about the previously seen states. This is common practice in algorithms like COMA and QMix (see sections \ref{sec:intro_coma} and \ref{sec:intro_qmix}).
+The policies in the preceding paragraphs were conditioned on the current state $S_t$. The expressive power of these policy networks increases when we could condition on the entire set of previously seen observations, namely the state trajectory $\tau$. This is done implicitly by using recurrent networks like a GRU, where the hidden state encodes the information about the previously seen states. This is common practice in algorithms like COMA and QMix (see section \ref{sec:intro_qmix}).
 %----------------------------------------------------------------------------
 \section{Multi-Agent Reinforcement Learning}
 \label{sec:intro_marl}
@@ -486,7 +490,8 @@ QMIX does this by representing each $Q_i$ by an \emph{agent network}. All these 
 \end{figure}
 
 Figure (b) is the global structure, where the results of several agent networks are combined in a mixing network. Figure (c) shows an agent network. Once again, a recurrent net (a GRU) is used to track the agent's trajectory. The result is the "best" Q-value available in this state, determined by $\epsilon$-greedy selection. Figure (a) shows the mixing network. Small hypernetworks (in red) take the state $s$ and produce the weights $W_k$ of the network. They consists of a single linear layer and an absolute activation function $|\cdot|$ which ensures that these weights are always positive.\\
-The advantages of this algorithm is that it combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. The goal is to prefer actions that are good for the collective in stead of just being good for individual agents. This could then result in emerging strategies that require interaction between agents. During training, this combined $Q_{tot}$ is computed by taking all state information into account. Several other algorithms that try to offer these advantages have been developed. The most prominent ones of those algorithms is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy-gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
+The advantages of this algorithm is that it combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. The goal is to prefer actions that are good for the collective in stead of just being good for individual agents. By doing this, this algorithm is a true multi-agent learning algorithm. This could then result in emerging strategies that require interaction between agents. During training, this combined $Q_{tot}$ is computed by taking all state information into account. This is an example of the centralised learning - decentralised execution paradigm.\\
+Several other algorithms that try to offer these advantages have been developed. The most prominent example of these algorithms is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy-gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
 
 %----------------------------------------------------------------------------
 \begin{comment}
