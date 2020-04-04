@@ -2,12 +2,13 @@
 \label{ch:algorithms}
 
 This chapter briefly explains the different algorithms used in this work. How they are used and what their purpose is for this thesis will be explained in chapter \ref{ch:impl_eval}.\\
-All the algorithms are part of a family of algorithms that can be viewed as \emph{machine learning} (ML). Instead of telling a computer what to do to perform a specific task by using explicit instructions, they rely on patterns and inference instead and learn the correct behavior. ML is traditionally divided into 3 subcategories:
+All the algorithms are part of a family of algorithms that can be viewed as \emph{machine learning} (ML). Instead of telling a computer what to do to perform a specific task by using explicit instructions, the computer has to learn to correct his behavior based on examples and inference. ML is traditionally divided into 3 subcategories:
 \begin{itemize}
     \item \emph{Supervised learning}, where we feed the algorithm with both the input and the correct output so that it can learn based on the predicted and correct output,
     \item \emph{Unsupervised learning}, where the algorithms learns to classify items based on their underlying distribution alone (and thus without being given the correct answer),
-    \item \emph{Reinforcement learning}, which will be explored in some detail in section \ref{sec:intro_rl}.
+    \item \emph{Reinforcement learning}, where there are no input/output examples available but the computer receives nevertheless a signal indicating how good or bad his decision is.
 \end{itemize}
+This chapter is constructed as follows: the first section introduces classical reinforcement learning concepts and algorithms. These algorithms can be classified into two main categories: Q-learning and policy gradients. Next, these algorithms will extended with the use of neural networks, placing them squarely in the deep learning framework. Finally, we'll look at how these algorithms can be used in a multi-agent setting, where multiple agents interact with the environment and learn at the same time.
 
 
 %----------------------------------------------------------------------------
@@ -77,12 +78,11 @@ The goal of RL is to choose a sequence of actions that maximizes the \emph{cumul
 \end{split}
 \label{eqn:cum_reward}
 \end{equation}
-where $0 \leqslant \gamma \leqslant 1$ is the \emph{discount factor}. This discount factor is a way to express that we are less certain about obtaining these future rewards. If $\gamma = 1$, all rewards, present and future, have the same impact. If $\gamma=0$, we only consider the current reward. Typically, $\gamma$ is chosen to be a bit less than $1$.
+where $0 \leqslant \gamma \leqslant 1$ is the \emph{discount factor}.\\
+This discount factor is a way to express that we are less certain about obtaining these future rewards. If $\gamma = 1$, all rewards, present and future, have the same impact. If $\gamma=0$, we only consider the current reward. Typically, $\gamma$ is chosen to be a bit less than $1$.
 You could also interpret $1-\gamma$ as the probability to end the episode at any stage, i.e. at every step we have a chance of $1-\gamma$ to jump to a terminal state. \\
-
 A function $\pi(s)$ is called a \emph{policy} when it returns an action $a$ to take in state $s$. More generally, a policy can also return a probability distribution over actions. In that case it is denoted as $\pi(a|s)$ (read: the policy over actions $a$ given that we are in state $s$).\\
-
-The \emph{value} of a policy $V_{\pi}$ is the expected value of $G_t$ when starting in state $S_t=s$ and following policy $\pi$:
+The \emph{value} of a policy $V_{\pi}$ is the expected value of $G_t$ when starting in state $S_t=s$ and following policy $\pi$ for the rest of the episode:
 \begin{equation}
     V_{\pi}(s) = \mathbb{E_{\pi}}[G_t | S_t=s]
      \label{eq:definition_V}
@@ -261,6 +261,7 @@ Artificial intelligence in general and machine learning in particular made signi
     y &= \phi \Big (\sum_{i=1}^{m}w_i x_i + b \Big) \\
       &= \phi (\bm{w}^T \bm{x} + b) 
     \end{split}
+    \label{eq:neuron}
 \end{equation}
 
 \begin{figure}[htp]
@@ -270,7 +271,7 @@ Artificial intelligence in general and machine learning in particular made signi
     \label{fig:neuron}
 \end{figure}
 
-The activation function $\phi$ has to be non-linear function like a sigmoid $\sigma(\cdot)$, a hyperbolic tangent function or a rectified linear unit (ReLU). These functions are represented in figure \ref{fig:activation_funcs}. It is important that these functions are non-linear; otherwise, the neural network would have no more representational power than a simple linear function.
+The activation function $\phi$ has to be a non-linear function like a sigmoid $\sigma(\cdot)$, a hyperbolic tangent function or a rectified linear unit (ReLU). These functions are represented in figure \ref{fig:activation_funcs}. It is important that these functions are non-linear; otherwise, the neural network would have no more representational power than a simple linear function.
 
 \begin{figure}[htp]
     \centering
@@ -279,10 +280,11 @@ The activation function $\phi$ has to be non-linear function like a sigmoid $\si
     \label{fig:activation_funcs}
 \end{figure}
 
-Neural networks \cite{nielsen2015neural} are made of several layers of these artificial neurons (the white dots in figure \ref{fig:neural_net}). In this figure an input of $8$ components is fed to the input layer and propagates through the different layers. At each step, the values are multiplied by the weights and passed through an activation function. Since the network has four output nodes, it can classify the input vector in four categories using one-hot encoding (i.e. for each category, only one output node will be activated while the others stay at zero).
+Neural networks \cite{nielsen2015neural} are made of several layers of these artificial neurons (the white dots in figure \ref{fig:neural_net}). In this figure an input of $8$ components is fed to the input layer and propagates through the different layers. At each step, the values are multiplied by the weights and passed through an activation function as in equation \ref{eq:neuron}. Since the network has four output nodes, it can classify the input vector in four categories using one-hot encoding (i.e. for each category, only one output node will be activated while the others stay at zero).\\
+The input to a neural network is a vector. Stacking multiple vectors along side each - for example when multiple samples are processed in parallel - gives an object which is referred to as a \emph{tensor} which can be thought of as the generalization of a matrix to multiple dimensions.
 %----------------------------------------------------------------------------
 \subsubsection{Stochastic Gradient Descent}
-Training this network means adjusting the neuron weights to minimize some error criterion. This is done by feeding samples to the input layer and comparing the produced output with the desired output. The error between both is used to adjust the different weights $w_i$ of the neurons with the help of an algorithm called \emph{backpropagation}. For each training sample we have the corresponding correct output; hence, this procedure is called \emph{supervised learning}.\\
+Training these networks means adjusting the neuron weights to minimize some error criterion. This is done by feeding samples to the input layer and comparing the produced output with the desired output. The error between both is used to adjust the different weights $w_i$ of the neurons with the help of an algorithm called \emph{backpropagation}. For each training sample we have the corresponding correct output; hence, this procedure is called \emph{supervised learning}.\\
 
 \begin{figure}[htp]
     \centering
@@ -490,8 +492,12 @@ QMIX does this by representing each $Q_i$ by an \emph{agent network}. All these 
 \end{figure}
 
 Figure (b) is the global structure, where the results of several agent networks are combined in a mixing network. Figure (c) shows an agent network. Once again, a recurrent net (a GRU) is used to track the agent's trajectory. The result is the "best" Q-value available in this state, determined by $\epsilon$-greedy selection. Figure (a) shows the mixing network. Small hypernetworks (in red) take the state $s$ and produce the weights $W_k$ of the network. They consists of a single linear layer and an absolute activation function $|\cdot|$ which ensures that these weights are always positive.\\
-The advantages of this algorithm is that it combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. The goal is to prefer actions that are good for the collective in stead of just being good for individual agents. By doing this, this algorithm is a true multi-agent learning algorithm. This could then result in emerging strategies that require interaction between agents. During training, this combined $Q_{tot}$ is computed by taking all state information into account. This is an example of the centralised learning - decentralised execution paradigm.\\
-Several other algorithms that try to offer these advantages have been developed. The most prominent example of these algorithms is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy-gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
+This algorithm has two advantages compared with IQL and even VDN:
+\begin{enumerate}
+    \item It combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. By doing this, the algorithm will prefer actions that are good for the collective instead of just being good for individual agents. The idea is that this encourages the agents to cooperate. This could then result in emerging strategies that require interaction between agents.
+    \item During training, this combined $Q_{tot}$ is computed by taking all state information into account.However, during execution, this state information is no lonnger availbale but it isn't needed, since the action selection is only based on the past and the current observation for each individual agent. This is an example of the centralised learning - decentralised execution paradigm \cite{oliehoek2008optimal}.
+\end{enumerate} 
+Several other centralised learning - decentralised execution algorithms have been proposed in recent years. The most prominent example is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
 
 %----------------------------------------------------------------------------
 \begin{comment}

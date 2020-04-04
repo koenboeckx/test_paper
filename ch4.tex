@@ -4,6 +4,13 @@
     \item other approaches than model-free learning (e.g. model learning)
     \item innate knowledge
     \item related: reward shaping
-    \item PARALLELIZATION: A3C and parallel simulation of episodes
+    \item PARALLELIZATION: A3C and parallel simulation of episodes; largest bottleneck: episode generation (not learning)
     \item dependence on hyperparameters $\gamma$ and learning rate
+    \item how well work learned strategies against alternative strategies of the opponents -> game theory
+\end{itemize}
+Hard problem because:
+\begin{itemize}
+    \item Sparse rewards -> potential solution: reward shaping / innate knowledge
+    \item Delayed reward -> temporal credit assignment
+    \item Multi-agent setting -> credit assignment among agents
 \end{itemize}
