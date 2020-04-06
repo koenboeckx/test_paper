@@ -1,16 +1,31 @@
 \chapter{Recommendations for Future Work}
 \label{ch:future_work}
+During the research for and the redaction of this thesis, a couple of points were raised that merit further research. These points include:
 \begin{itemize}
-    \item other approaches than model-free learning (e.g. model learning)
-    \item innate knowledge
-    \item related: reward shaping
-    \item PARALLELIZATION: A3C and parallel simulation of episodes; largest bottleneck: episode generation (not learning)
-    \item dependence on hyperparameters $\gamma$ and learning rate
-    \item how well work learned strategies against alternative strategies of the opponents -> game theory
+    \item The algorithms presented in this work are sometimes highly sensitive to a good choice of hyperparameters, like the learning rate, the shape and size of the neural network, the buffer size, \ldots. More hyperparameters lead to a combinatorial explosion of the search space, making finding a good set of parameters very hard. A more complete exploration of this hyperparameter search space however might lead to better results.
+    \item The significant impact of the discount factor $\gamma$ on the convergence of algorithms of the two different algorithm families, as mentioned in section \ref{sec:init_model_qmix}.
+    \item The significant worse performance of the actor-critic algorithm compared to the simpler REINFORCE algorithm while the theory suggests the opposite. This might be an implementation issue or be related to a bad choice of hyperparameters.
+    \item The model should be made more realistic. This would include some of the suggestions offered in section \ref{sec:extended_model} like asymmetric agents and more state variables like fuel. Another improvement might be to process the board with a convolutional neural network as suggested in section \ref{sec:init_model_applied}
+    \item Other multi-agent algorithms, like the aforementioned COMA algorithm, should be implemented and tested
 \end{itemize}
-Hard problem because:
+A part from these minor points, I would like to propose some ideas for future research. Applying multi-agent RL to the problem as it has been set up is hard:
 \begin{itemize}
-    \item Sparse rewards -> potential solution: reward shaping / innate knowledge
-    \item Delayed reward -> temporal credit assignment
-    \item Multi-agent setting -> credit assignment among agents
+    \item The reward that an agent receives is sparse: only at the end of an episode does the environment give an indication of how good the sequence of moves was. This implies that the agent has no way to discern whether which particular action was good or bad. One way to address this would be to add some innate knowledge  to the environment or the agent. This can be implemented in at least two different ways:
+    \begin{enumerate}
+        \item Restrict certain actions in certain situations; e.g. we know that is of no use to fire at an enemy that is already dead. In the current model, these kind of actions are still allowed.
+        \item Reward the agent for certain situations that seem beneficial; e.g. reward an individual agent for killing an opponent, even if this doesn't lead to the end of an episode. This is called \emph{reward shaping} and can significantly reduce training time.
+    \end{enumerate}
+    The danger of these methods is that certain beneficial strategies that were not anticipated will not be discovered.
+    \item Similar to but distinct of the previous issue is the problem of temporal credit assignment and delayed rewards: the effect of good or bad actions might only be discovered after a while. From another point of view: when an episode is won it might not always be entirely clear which action or combination of actions led to the win. To improve selection of good actions, mechanisms must be put in place to select before an update these actions that contributed most to the final result. A simple example could be to purposefully decrease the weight of actions that didn't do anything, like taking a step down and then a step up to end up in the same spot.
+    \item The assignment of credit among \emph{agents} is also something that has not been addressed: actions from the first agent might lead to winning a game while the other agent does nothing of use. However, in the end they both receive the same reward.
 \end{itemize}
+
+Another problem is the problem of \emph{generalization}:
+\begin{itemize}
+    \item When the terrain or capabilities of the opposing agents changes, how well is the learned strategy able to cope with that change? Can we simply substitute one terrain model for another and expect the result to be as good? Should a little retraining happen (e.g. only retrain the final layer of the neural network that determines the policy while the other weights stay the same\footnote{This is known as \emph{transfer learning}}). Or must the entire network be retrained?
+    \item When the \emph{strategy} of the opponent changes, how well does the learned strategy performs? This is a game-theoretic question: is there a strategy that performs best against all other strategies? The answer is most likely no. A strategy might work very well against a couple of other strategies but can be catastrophic against others, while another strategy might work reasonably well against a broad spectrum of opposing strategies.
+\end{itemize}
+
+Another avenue of research should be a more thorough exploration of the developed strategies, with more agents and in more challenging terrain. In a second phase, the strategies should analyzed in cooperation with specialists from Belgian Defence, e.g. the Defence College. This latter point was part of the initial thesis proposal; however, because the software and the results aren't mature enough, this hasn't been done yet.
+
+A final suggestion for future research is more technical of nature. If these algorithms should be able to develop strategies in real time, a lot of work should be put in decreasing their run times. Running on my PC or even on the servers of the CISS department, a run time of a couple of hours is no exception. Analysis of the algorithmic run time has shown that the generation of episodes is the main bottleneck, followed by performing update steps on the neural network. The generation of episodes can be done in parallel before a network update is done since it that time frame the characteristics of the neural network don't change. Some existing algorithms, like \emph{Asynchronous Advantage Actor-Critic} (A3C)\cite{mnih2016asynchronous}, already do this and they might improve run time.

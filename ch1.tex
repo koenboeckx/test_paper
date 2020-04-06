@@ -159,7 +159,7 @@ Computing the gradient $\nabla_{\bm{\theta}} J(\bm{\theta})$ is non-trivial in g
 with $\mu(s)$ the distribution of states under policy $\pi$. The last expression is the one based on samples drawn from interacting with the environment. This equation is very useful because it links the gradient of the performance measure $J(\bm{\theta})$ to the gradient of the policy $\pi(A_t|S_t, \bm{\theta})$ which can easily be computed (especially with automatic differentiation frameworks like {\tt PyTorch} - see section \ref{sec:intro_deep_rl}).\\
 It follows that the policy parameter vector $\bm{\theta}$ is updated according to following rule:
 \begin{equation}
-    \bm{\theta} \leftarrow \bm{\theta} + \alpha \, G_t \, \frac{\nabla_{\bm{\theta}} \pi(A_t|S_t, \bm{\theta})}{\pi(A_t|S_t, \bm{\theta})}
+    \bm{\theta}_{t+1} = \bm{\theta}_t + \alpha \, G_t \, \frac{\nabla_{\bm{\theta}_t} \pi(A_t|S_t, \bm{\theta}_t)}{\pi(A_t|S_t, \bm{\theta}_t)}
     \label{eqn:reinforce_update}
 \end{equation}
 This expression has intuitive appeal: each increment of $\bm{\theta}$ is in the direction in parameter space that most increases the probability of taking action $A_t$ in state $S_t$. This direction is multiplied by the expected reward $G_t$ and divided by the action probability $\pi(A_t|S_t)$. The former causes the parameter to move most in directions that favor actions with higher returns. The latter makes sense because otherwise actions that are selected frequently have an unfair advantage.
@@ -196,7 +196,7 @@ Note that $\nabla_{\bm{\theta}} \ln \pi$ is shorthand for $\frac{\nabla_{\bm{\th
 %----------------------------------------------------------------------------
 \subsection{Actor-Critic Methods}
 \label{sec:actor_critic}
-While REINFORCE in theory converges to an optimal policy, it suffers from high variance: the gradient estimates are unbiased but very noisy. Thus convergence is slow and the algorithm is very sample-inefficient, i.e. many samples must be generated to achieve an acceptable result. A simple fix would be to add a \emph{baseline} $b(S_t)$ that is then subtracted from the cumulative reward $G_t$. It is important that this baseline only depends on the state and not on the action. If that is the case, the expected value in \ref{eqn:pol_grad_theorem} keeps it's value, namely $\nabla J(\bm{\theta})$ and the estimator remains unbiased. The new update rule then becomes (from \cite{sutton2018reinforcement}):
+While REINFORCE in theory converges to an optimal policy, it suffers from high variance: the gradient estimates are unbiased but very noisy. Thus convergence is slow and the algorithm is very sample-inefficient, i.e. many samples must be generated to achieve an acceptable result. A simple fix would be to add a \emph{baseline} $b(S_t)$ that is then subtracted from the cumulative reward $G_t$. It is important that this baseline only depends on the state and not on the action. If that is the case, the expected value in \ref{eqn:pol_grad_theorem} keeps its value, namely $\nabla J(\bm{\theta})$ and the estimator remains unbiased. The new update rule then becomes (from \cite{sutton2018reinforcement}):
 \begin{equation}
     \label{eqn:pg_update}
     \bm{\theta}_{t+1} = \bm{\theta}_{t} + \alpha \,\big ( G_t - b(S_t) \big) \, \nabla_{\bm{\theta}} \ln \pi(A_t|S_t,\bm{\theta})
@@ -247,7 +247,7 @@ Another advantage of the Actor-Critic algorithm in \ref{algo:actor_critic} is th
 %----------------------------------------------------------------------------
 \section{Deep Reinforcement Learning}
 \label{sec:intro_deep_rl}
-The RL algorithms described in the previous section use function approximators to represent the policy $\pi(a|s)$, the value function $V(s)$ or the state-action function $Q(s,a)$. These function approximators are most commonly implemented as neural networks. If that's the case, we speak of \emph{Deep Reinforcement Learning} (DRL). In order to describe these DRL algorithms, we first explain what is \emph{Deep learning} and how it differs from other ML algorithms.
+The RL algorithms described in the previous section use function approximators to represent the policy $\pi(a|s)$, the value function $V(s)$ or the state-action function $Q(s,a)$. These function approximators are most commonly implemented as neural networks. If that's the case, we speak of \emph{Deep Reinforcement Learning} (DRL). In order to describe these DRL algorithms, we first explain what is \emph{Deep Learning} (DL) and how it differs from other ML algorithms.
 
 %------------------------------------------------------------------------------------------------------
 \subsection{Deep Learning}
@@ -300,7 +300,7 @@ In order to adjust the network weights, the most commonly used procedure is \emp
 \end{equation}
 with $N$ the number of samples. The step size $\alpha$ is in this context often called the \emph{learning rate} and in the future we will refer to it by this name.
 
-While this technique only finds a local rather than a global minimum of the loss function, it has been shown that the resulting optimum works well in practice \cite{bottou2010large}.  However, if the local error surface is not well conditioned\footnote{Technically, this mean that there is a large difference in eigenvalues of the Hessian}, convergence to the local minimum can be slow. A popular method to speed up convergence is SGD with \emph{momentum} \cite{qian1999momentum}, where the gradient that is used for the update is a moving average of the previous immediate gradients:
+While this technique only finds a local rather than a global minimum of the loss function, it has been shown that the resulting optimum works well in practice \cite{bottou2010large}.  However, if the local error surface is not well conditioned\footnote{Technically, this means that there is a large difference in eigenvalues of the Hessian.}, convergence to the local minimum can be slow. A popular method to speed up convergence is SGD with \emph{momentum} \cite{qian1999momentum}, where the gradient that is used for the update is a moving average of the previous immediate gradients:
 
 \begin{align*}
         V_t &= \beta \, V_{t-1} + (1-\beta) \sum_{i=1}^{N} \nabla_{\bm{\theta}} J_{i}(\bm{\theta}) \quad \quad 0 \leq \beta < 1\\
@@ -309,7 +309,6 @@ While this technique only finds a local rather than a global minimum of the loss
 A popular implementation of this paradigm is \emph{Adam} \cite{kingma2014adam}, an algorithm that uses momentum with an adaptive learning rate. This is the optimization algorithm that will be used throughout this thesis.
 
 %----------------------------------------------------------------------------
-\begin{comment}
 \subsubsection{Convolutional Neural Networks}
 A \emph{Convolutional Neural Network} (CNN) \cite{lecun1989backpropagation} is a specific instance of an artificial neural network where several square windows `glide` over an image and at each position the covered pixels are multiplied by the window weights and summed. This operation is called a \emph{convolution}. These kind of networks are very well suited for processing images since they implicitly capture that the salient characteristics (forms, colors, texture, \ldots) of objects in images are invariant to translations.\\
 
@@ -323,19 +322,17 @@ The typical structure of a CNN used for classification is shown in figure \ref{f
 \end{figure}
 
 After the convolutions typically follows a subsampling phase, where for a window of pixels only the one with the maximum value is retained (\emph{max-pooling}) and which will reduce the computational overhead. Another sequence of convolutions and subsampling leads to a final set of feature maps. The idea is to learn more complex features as we move up in to hierarchy, going form edges to textures to parts of objects to complete objects. These feature maps are then reduced to a single vector which will be processed by a more traditional multi-layer network (a sequence of fully-connected layers).\\
-\end{comment}
 %----------------------------------------------------------------------------
 \subsubsection{Recurrent Neural Networks}
-A special type of neural network is a \emph{Recurrent Neural Network} (RNN), which is mostly used to model sequential inputs. It is a normal neural net where the network output is at the next time step fed back to the input (after multiplication with weights $V$ and activation), as shown in the left image of figure \ref{fig:rnn}.\\
-To analyze these kind of networks, they are "unfolded" so that each step is represented by a separate but identical network (the right part of figure \ref{fig:rnn}). The internal state vector $\bm{h}$ (also called the \emph{hidden state}) is then at each time step seen an a new "input" $\bm{h}_t$ to the network at time $t$, just as the true input $\bm{x}_t$.\\
+Another special type of a neural network is a \emph{Recurrent Neural Network} (RNN), which is mostly used to model sequential inputs. It is a normal neural net where the network output is at the next time step fed back to the input (after multiplication with weights $V$ and activation), as shown in the left image of figure \ref{fig:rnn}.\\
+To analyze these kind of networks, they are "unfolded" so that each step is represented by a separate but identical network (the right part of figure \ref{fig:rnn}). The internal state vector $\bm{h}$ (also called the \emph{hidden state}) is then at each time step seen as a new "input" $\bm{h}_t$ to the network at time $t$, just as the true input $\bm{x}_t$.\\
 \begin{figure}[htp]
     \centering
     \includegraphics[width=14cm]{images/rnn.png}
     \caption{Structure of a typical RNN}
     \label{fig:rnn}
 \end{figure}
-The most prominent examples of RNN's are Long Short-Term Memory (LSTM) \cite{hochreiter1997long} networks and Gated Recurrent Unit (GRU) \cite{cho2014learning} networks. These networks extend the basic structure of figure \ref{fig:rnn} to better model long-term dependencies in the input sequence. In what follows, GRU's will be explored in some detail since they will be the neural network of choice to model the policy- and actor networks of the different agents.\\
-
+The most prominent examples of RNN's are Long Short-Term Memory (LSTM) \cite{hochreiter1997long} networks and Gated Recurrent Unit (GRU) \cite{cho2014learning} networks. These networks extend the basic structure of figure \ref{fig:rnn} to better model long-term dependencies in the input sequence. In what follows, GRU's will be explored in some detail since they will be the neural network of choice to model the policy- and value networks of the different agents.\\
 GRU's use gating mechanisms to control and manage the flow of information between cells in the neural network. The goal is to capture dependencies from large sequences of data without discarding relevant information from earlier parts of the sequence. A GRU cell contains two gates: an \emph{update gate} and a \emph{reset gate} who are trained to selectively filter out any irrelevant information while keeping what is useful. In essence, these gates are vectors containing values between $0$ and $1$ which are multiplied with the input data or the hidden state. A $0$ means this information is unimportant, while a $1$ signifies the opposite. The reset gate is responsible for deciding which portions of the previous hidden state are to be combined with the current input to propose a new hidden state. The update gate  is responsible for determining how much of the previous hidden state is to be retained and what portion of the proposed new hidden state is to be included in the final hidden state.\\
 Figure \ref{fig:gru_cell} shows the details of a single GRU unit in a larger unfolded RNN. As before, the input of the cell is the input vector $\bm{x}_t$ and the hidden state $\bm{h}_{t-1}$ coming from the preceding cell. The reset vector $\bm{R}_t$ and update vector $\bm{Z}_t$ are generated by passing a linear combination of $\bm{x}_t$ and $\bm{h}_{t-1}$ through a sigmoid function $\sigma$, producing values between $0$ and $1$. Output $\bm{o}_t$ and new hidden state $\bm{h}_t$ are the result of applying a nonlinear function (here a $\tanh$) to linear combinations of $\bm{x}_t$ and $\bm{h}_{t-1}$ and modulated by the value of the update and reset vector.\\
 
@@ -346,7 +343,7 @@ Figure \ref{fig:gru_cell} shows the details of a single GRU unit in a larger unf
     \label{fig:gru_cell}
 \end{figure}
 
-The different parameters are thus computed as follows\footnote{Biases $b$ removed for simplicity}:
+The different parameters are thus computed as follows\footnote{Biases $b$ removed for simplicity.}:
 \begin{align*}
         R_t &= \sigma\Big [ W_{ir} \bm{x}_t + W_{hr} \bm{h}_{t-1} \Big ] \\
         Z_t &= \sigma \Big [ W_{iz} \bm{x}_t + W_{hz} \bm{h}_{t-1} \Big ] \\
@@ -359,7 +356,7 @@ While the defining characteristics of neural networks have been known since the 
 %-----------------------------------------------------------------------------------------------
 \subsection{Deep Q-Networks}
 \label{sec:deep_qn}
-A deep Q-network (DQN) was one of the first implementations of RL with deep learning methods. It's first use was to discover policies to play Atari games \cite{mnih2013playing} and is considered to be one of the breakthroughs of recent AI.\\
+A deep Q-network (DQN) was one of the first implementations of RL with deep learning methods. Its first use was to discover policies to play Atari games \cite{mnih2013playing} and is considered to be one of the breakthroughs of recent AI.\\
 In DQN, a neural network is trained to estimate the $Q$-value of a particular state-action pair. This means that in algorithm \ref{algo:q_learning} the $Q(S,A)$ table is replaced with a neural net $f_{\theta}(S)$ that has $N_A$ outputs and thus  produces the estimated $Q$-value for each action $A$. Applied to Atari games like Pong, the state of the environment, and thus the input of this neural network, is the image of the game projected on the computer screen. Consequently, the initial layers of the neural net are convolutional layers, while the final layers are fully connected layers to estimate the output values.\\
 Training is done by generating samples through interaction with the environment. The error needed to adjust the network weights is the square of the temporal difference of the traditional Q-learning algorithm:
 \begin{equation}
@@ -409,7 +406,6 @@ When applying deep learning methods to the policy gradient methods of section \r
     \label{fig:deep_pg}
 \end{figure}
 Adjusting the network weights is done by using an update rule similar to equation \ref{eqn:pg_update}. The cost function thus becomes the logarithm over the action distribution.\\
-
 Similarly, the critic will also be represented as a neural network. Typically, both actor- and critic-network share the lower layers in a common body, since they both have to process the same state and there is no reason to assume that the learned features in these layers should be different for actor or critic. This helps by letting actor and critic share the low-level features but combine them in a different way. The end result is a shared network which predicts action distributions and state values simultaneously. Learning is done more efficiently in this manner. Figure \ref{fig:common_body} represents this concept.
 
 \begin{figure}[htp]
@@ -436,21 +432,20 @@ The policies in the preceding paragraphs were conditioned on the current state $
 %----------------------------------------------------------------------------
 \section{Multi-Agent Reinforcement Learning}
 \label{sec:intro_marl}
-While reinforcement learning is a promising technique for training agents, the mathematical framework that justifies it is inappropriate for multi-agent environments. The theory of Markov Decision Processes assumes that the agent's environment is stationary and no other adaptive agents are present. This is no longer the case when we consider multiple learning agents.\\
+While reinforcement learning is a promising technique for training agents, the mathematical framework that justifies it is inappropriate for multi-agent environments. The theory of Markov Decision Processes assumes that the agent's environment is stationary and no other adaptive agents are present. This is no longer the case when we consider multiple learning agents.
 
 \emph{Markov Games} \cite{littman1994markov} are an extension of the MDP framework that accounts for interacting agents. To describe a Markov game with $k$ agents, we consider:
 \begin{itemize}
     \item a set of states $\mathcal{S}$,
     \item a collection of action sets $A_1, \ldots, A_k$, one set for each agent,
 \end{itemize}
-Transitions from one state to the next are controlled by a transition function $T: \mathcal{S} \times A_1 \times \ldots A_k \rightarrow \text{PD}(\mathcal{S})$ with $\text{PD}(\mathcal{S})$ the set of probability distribution over states. It is important to note that a transition is determined by the \emph{joint action set} $A_1 \times \ldots A_k$ and not just a single action. Agents can thus influence each other in complex ways. A single instance of this joint action space is abbreviated $\bm{u} \in \mathcal{A} = A_1 \times \ldots A_k$. \\
+Transitions from one state to the next are controlled by a transition function $T: \mathcal{S} \times A_1 \times \ldots A_k \rightarrow \text{PD}(\mathcal{S})$ with $\text{PD}(\mathcal{S})$ the set of probability distribution over states. It is important to note that a transition is determined by the \emph{joint action set} $A_1 \times \ldots A_k$ and not just a single action. Agents can thus influence each other in complex ways. A single instance of this joint action space is abbreviated $\bm{u} \in \mathcal{A} = A_1 \times \ldots A_k$. 
 
 Every agent $i$ has an associated reward function $\mathcal{R}_i: \mathcal{S} \times A_1 \times \ldots A_k \rightarrow \mathbb{R}$ and tries to maximize its expected sum of discounted rewards $\mathbb{E}\Big [ \sum_{j=0}^{\infty} \gamma^j R_{i, t+j} \Big ]$. Thus, since the rewards and transition function depends on the joint action set, the value and action-value functions for agent $i$ do as well:
 \begin{equation}
     V_i^{\pi} = \sum_{\bm{u}}\pi(s, \bm{u}) \sum_{s} \mathcal{T}(s, u_i, \bm{u}_{-i}, s') \big [\mathcal{R}_i((s, u_i, \bm{u}_{-i}) + \gamma V_i(s')]
 \end{equation}
 and the optimal policy for agent $i$ will also depend on the policies of the other agents. This is another way of saying that in the presence of other learning agents, the environment isn't stationary.\\
-
 The following sections describe a couple algorithms that try to maximize this term in an efficient manner. These algorithms are typically classified under the header of \emph{Multi-Agent Reinforcement Learning} (MARL).
 A particular issue with multi-agent learning is the challenge of multi-agent \emph{credit assignment}: when two or more agents cooperate, which action of which agent led to the victory (or the loss)? Since the reward is global and the same for both players, this can be difficult to discern.
 %----------------------------------------------------------------------------
@@ -464,16 +459,16 @@ Another algorithm along the same line is Independent Actor Critic (IAC), where t
 %\label{sec:intro_minimax_q}
 
 %----------------------------------------------------------------------------
-\subsection{QMIX}
+\subsection{QMix}
 \label{sec:intro_qmix}
 
-\emph{QMIX} \cite{rashid2018qmix} is recent MARL algorithm that relies on the DQN paradigm. Properly capturing the effect's of the agents' actions requires a global action-value function $Q_{tot}(s, \bm{u})$. However,  this function is difficult to learn and even if learned, it is not obvious how to extract decentralized policies for individual agents. A simple solution would be to learn a centralised $Q_{tot}$ that is the sum of individual value functions $Q_i$ for the individual agents $i$:
+\emph{QMix} \cite{rashid2018qmix} is recent MARL algorithm that relies on the DQN paradigm. Properly capturing the effects of the agents' actions requires a global action-value function $Q_{tot}(s, \bm{u})$. However,  this function is difficult to learn and even if learned, it is not obvious how to extract decentralized policies for individual agents. A simple solution would be to learn a centralised $Q_{tot}$ that is the sum of individual value functions $Q_i$ for the individual agents $i$:
 \begin{equation}
     Q_{tot}(s, \bm{u}) = \sum_{i=1}^{n} Q_i(s_i, a_i)
 \end{equation}
-A decentralised policy for agent $i$ would then simply be greedy action selection based on $Q_i$. This is how \emph{Value Decomposition Networks} \cite{sunehag2018value} work. However, restraining $Q_{tot}$ to the sum of individual $Q$-functions is too restrictive.\\
+A decentralised policy for agent $i$ would then simply be greedy action selection based on $Q_i$. This is how \emph{Value Decomposition Networks} (VDN) \cite{sunehag2018value} work. However, restraining $Q_{tot}$ to the sum of individual $Q$-functions is too restrictive to approximate a joint action-value function.
 
-The idea behind QMIX is that we only need to ensure that finding the best global joint action on $Q_{tot}$ yields the same result as a set of best actions on individual $Q_i$'s:
+The idea behind QMix is that we only need to ensure that finding the best global joint action on $Q_{tot}$ yields the same result as a set of best actions on individual $Q_i$'s:
 \begin{equation}
     \bm{u}^* = \argmax_{\bm{u}} Q_{tot}(s, \bm{u}) = \big [ \argmax_{a_1} Q_1(s, a_1), \, \ldots,\, \argmax_{a_N} Q_1(s, a_N) \big ]
 \end{equation}
@@ -482,20 +477,20 @@ A sufficient condition to realize this is to enforce a monotonicity constraint o
     \label{eqn:qmix}
     \frac{\partial Q_{tot}}{\partial Q_i} \geq 0, \forall i
 \end{equation}
-QMIX does this by representing each $Q_i$ by an \emph{agent network}. All these $Q_i$'s are combined into $Q_{tot}$ with a \emph{mixing network} in a non-linear way (contrary to VDN) but enforces conditions \ref{eqn:qmix} by forcing the weights of the mixing network to be positive. The details of these networks and how they interact is shown in figure \ref{fig:qmix_structure}.\\
+QMix does this by representing each $Q_i$ by an \emph{agent network}. All these $Q_i$'s are combined into $Q_{tot}$ with a \emph{mixing network} in a non-linear way (contrary to VDN) but enforces conditions \ref{eqn:qmix} by forcing the weights of the mixing network to be positive. The details of these networks and how they interact is shown in figure \ref{fig:qmix_structure}.\\
 
 \begin{figure}[htp]
     \centering
     \includegraphics[width=16cm]{images/qmix_structure.png}
-    \caption{Structure of QMIX (reproduced from \cite{rashid2018qmix})}
+    \caption{Structure of QMix (reproduced from \cite{rashid2018qmix})}
     \label{fig:qmix_structure}
 \end{figure}
 
-Figure (b) is the global structure, where the results of several agent networks are combined in a mixing network. Figure (c) shows an agent network. Once again, a recurrent net (a GRU) is used to track the agent's trajectory. The result is the "best" Q-value available in this state, determined by $\epsilon$-greedy selection. Figure (a) shows the mixing network. Small hypernetworks (in red) take the state $s$ and produce the weights $W_k$ of the network. They consists of a single linear layer and an absolute activation function $|\cdot|$ which ensures that these weights are always positive.\\
+Figure (b) is the global structure, where the results of several agent networks are combined in a mixing network. Figure (c) shows an agent network. Once again, a recurrent net (a GRU) is used to track the agent's trajectory. The result is the "best" Q-value available in this state, determined by $\epsilon$-greedy selection. Figure (a) shows the mixing network. Small hypernetworks (in red) take the state $s$ and produce the weights $W_k$ of the network. They consist of a single linear layer and an absolute activation function $|\cdot|$ which ensures that these weights are always positive.\\
 This algorithm has two advantages compared with IQL and even VDN:
 \begin{enumerate}
     \item It combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. By doing this, the algorithm will prefer actions that are good for the collective instead of just being good for individual agents. The idea is that this encourages the agents to cooperate. This could then result in emerging strategies that require interaction between agents.
-    \item During training, this combined $Q_{tot}$ is computed by taking all state information into account.However, during execution, this state information is no lonnger availbale but it isn't needed, since the action selection is only based on the past and the current observation for each individual agent. This is an example of the centralised learning - decentralised execution paradigm \cite{oliehoek2008optimal}.
+    \item During training, this combined $Q_{tot}$ is computed by taking all state information into account. However, during execution, this state information is no longer available but it isn't needed, since the action selection is only based on the past and the current observation for each individual agent. This is an example of the centralised learning - decentralised execution paradigm \cite{oliehoek2008optimal}.
 \end{enumerate} 
 Several other centralised learning - decentralised execution algorithms have been proposed in recent years. The most prominent example is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
 

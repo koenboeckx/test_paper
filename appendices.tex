@@ -1,9 +1,6 @@
-%Bijlagen eindwerk
-%\thispagestyle{fancy}
-%\chapter*{Bijlagen}
-%\thispagestyle{plain}
 \begin{appendices}
 %\appendix
+These appendices shown how the major algorithms in this thesis (IQL, IAC, QMix) have been implemented. All imports, loggings and technical details that are less relevant have been removed for clarity. This means that as such, these algorithms are not functional. To experiment with the algorithms, please consult the {\tt GitHub} reference page:\\ \url{https://github.com/koenboeckx/VKHO}
 
 \chapter{Independent Q-Learning}
 \label{app:iql}
@@ -11,76 +8,167 @@
 \begin{minted}{python}
 def train(env, agents, lr=0.0001):
     
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    with SummaryWriter() as writer:
+    # create and initialize model for agent
+    input_shape = (1, env.board_size, env.board_size)
+    for agent in agents:
+        agent.set_model(input_shape, env.n_actions, lr)
+
+    get_epsilon = create_temp_schedule(1.0, 0.1, 500000)
+
+    reward_sum = 0 # keep track of average reward
+    n_terminated = 0
+
+    buffers = [ReplayBuffer(buffer_size) for _ in agents]
+    state = env.get_init_game_state()
+    
+    for step_idx in range(int(n_steps)):
         
-        # create and initialize model for agent
-        input_shape = (1, env.board_size, env.board_size)
-        for agent in agents:
-            agent.set_model(input_shape, env.n_actions, lr, device)
-
-        get_epsilon = create_temp_schedule(1.0, 0.1, 500000)
-
-        reward_sum = 0 # keep track of average reward
-        n_terminated = 0
-
-        buffers = [ReplayBuffer(buffer_size) for _ in agents]
-        state = env.get_init_game_state()
+        eps = get_epsilon(step_idx)
+        actions = [0, 0, 0, 0]
+        for agent in env.agents:
+            if agent in agents:
+                # with prob epsilon, select random action a;
+                # otherwise a = argmax Q(s, .)
+                actions[agent.idx] = agent.get_action(state, epsilon=eps)
+            else:
+                # for other agents => pick random action
+                actions[agent.idx] = agent.get_action(state)
         
-        for step_idx in range(int(n_steps)):
-            
-            eps = get_epsilon(step_idx)
-            actions = [0, 0, 0, 0]
-            for agent in env.agents:
-                if agent in agents:
-                    # with prob epsilon, select random action a;
-                    # otherwise a = argmax Q(s, .)
-                    actions[agent.idx] = agent.get_action(state, 
-                                            epsilon=eps, device=device)
-                else:
-                    # for other agents => pick random action
-                    actions[agent.idx] = agent.get_action(state)
-            
-            # Execute actions, get next state and rewards
-            next_state = env.step(state, actions)
-            reward = env.get_reward(next_state)
+        # Execute actions, get next state and rewards
+        next_state = env.step(state, actions)
+        reward = env.get_reward(next_state)
 
-            done = False
-            if env.terminal(next_state) != 0:
-                n_terminated += 1
-                reward_sum += reward[0]
-                done = True
-                next_state =  env.get_init_game_state()
+        done = False
+        if env.terminal(next_state) != 0:
+            n_terminated += 1
+            reward_sum += reward[0]
+            done = True
+            next_state =  env.get_init_game_state()
 
-            # Store transition (s, a, r, s') in replay buffer
-            for idx, agent in enumerate(agents):
-                exp = Experience(state=state, action=actions[agent.idx],
-                                 reward=reward[agent.idx],
-                                 next_state=next_state, done=done)
-                buffers[idx].insert(exp)
+        # Store transition (s, a, r, s') in replay buffer
+        for idx, agent in enumerate(agents):
+            exp = Experience(state=state, action=actions[agent.idx],
+                             reward=reward[agent.idx],
+                             next_state=next_state, done=done)
+            buffers[idx].insert(exp)
 
-            if len(buffers[0]) >= replay_start_size:
-                for agent_idx, agent in enumerate(agents):
-                    agent.model.optim.zero_grad()
-                    # Sample minibatch and compute loss
-                    minibatch = buffers[agent_idx].sample(mini_batch_size)
-                    loss = calc_loss(agent, minibatch, gamma, device=device)
+        if len(buffers[0]) >= replay_start_size:
+            for agent_idx, agent in enumerate(agents):
+                agent.model.optim.zero_grad()
+                # Sample minibatch and compute loss
+                minibatch = buffers[agent_idx].sample(mini_batch_size)
+                loss = calc_loss(agent, minibatch, gamma, device=device)
 
-                    writer.add_scalar('agent{}_loss'.format(agent.idx),
-                                        loss.item(), step_idx)
-                
-                    # perform training step 
-                    loss.backward()
-                    agent.model.optim.step()
+                # perform training step 
+                loss.backward()
+                agent.model.optim.step()
 
-                    if step_idx > 0 and step_idx % sync_rate == 0:
-                        print('iteration {} - syncing ...'.format(step_idx))
-                        agent.sync_models()
+                if step_idx > 0 and step_idx % sync_rate == 0:
+                    agent.sync_models()
 
-            state = next_state
+        state = next_state
 
 
 \end{minted}
+
+\chapter{Independent Actor-Critic}
+\label{app:iac}
+\begin{minted}{python}
+
+class IACAgent(Agent):
+    "An Actor-Critic Agent"
+    def act(self, obs):
+        "Select an action based on an observation"
+
+        unavailable_actions = self.env.get_unavailable_actions()[self]
+        # compute the logits based on network policy model
+        _, logits = self.model([obs])
+        
+        # for unavailable actions, set logits to very low value
+        for action in unavailable_actions:
+            logits[action.id] = -np.infty
+        
+        # create a prob distribution based on logits and sample from it
+        action_idx = Categorical(logits=logits).sample().item()
+        return self.actions[action_idx]
+
+    def update(self, batch):
+        "Perform one update step according to the IAC algorithm"
+        _, actions, rewards, _, dones, observations, hidden,\ 
+            next_obs, unavail = zip(*batch)
+        
+        # only perform updates on actions performed while alive
+        self_alive = [idx for idx, obs in enumerate(observations) if obs[self].alive]
+
+        rewards = torch.tensor([reward[self.team] for reward in rewards])
+        
+        # use the actor-critic network to compute V(s) and logits
+        values, logits, h = self.model(observations, hidden) 
+        next_vals, _, _   = self.target(next_obs, h)
+        
+        # pick the actions that were performed by the agent self
+        actions = torch.tensor([action[self] for action in actions])[self_alive]
+        
+        # set logits for unavailable actions to very low value
+        for idx in self_alive
+            logits[idx,:] = -np.infty
+        
+        # compute the target value and the resulting advantage value
+        target = rewards + gamma * next_vals * (1.0 - dones)
+        advantage = target.detach() - values.squeeze()
+        advantage = advantage[self_alive_idx]        
+        
+        # compute the log probabilities for the chosen actions
+        log_prob = F.log_softmax(logits, dim=-1)
+        log_prob_act = log_prob[self_alive_idx, actions]
+        log_prob_act_val = advantage.detach() * log_prob_act
+        
+        # compute the entropy over the resulting policy distribution
+        probs = F.softmax(logits, dim=1)
+        entropy = -(probs * log_prob).sum(dim=1)
+        loss_entropy = entropy.mean()
+        
+        # compute policy and value losses and the global loss function
+        loss_pol = -log_prob_act_val.mean()
+        loss_val = advantage.pow(2).mean()
+        loss = loss_pol + loss_val - beta * loss_entropy
+        
+        # feed loss backward through computational grad and take update step
+        self.model.optimizer.zero_grad()
+        loss.backward()
+        self.model.optimizer.step()
+
+def train():
+    # create the agents and put them into teams
+    team_blue = [IACAgent() for _ in range(n_friends)]
+    team_red  = [Agent()    for _ in range(n_enemies)]
+    training_agents = team_blue
+    agents = team_blue + team_red
+    
+    # create the environment
+    env = Environment(agents, args)
+
+    # generate the neural network model and assign it to the training agents  
+    models = generate_model(input_shape=n_inputs, n_actions=n_actions)
+    for agent in training_agents:
+        agent.set_models(models)
+
+    # start the train sequence
+    for step_idx in range(int(n_steps):
+        batch = []
+        for _ in range(n_episodes_per_step):
+            # generate an episode and add it to the batch
+            episode = generate_episode(env)
+            batch.extend(episode)
+
+        for agent in training_agents:
+            agent.update(batch)
+            if step_idx % 50 == 0: # sync target network
+                agent.sync_models()
+\end{minted}
+
+\chapter{QMix}
+\label{app:qmix}
 
 \end{appendices}
 

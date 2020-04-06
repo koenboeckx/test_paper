@@ -22,7 +22,7 @@ However, it does allow us to develop strategies for two opposing players form th
 This section describes a couple of technical points about the implementation of the algorithms.
 \begin{itemize}
     \item Because of the structure of the observation that the environment provides to an agent (see \ref{sec:first_model}), all (learning) agents can use the same network. This is known as \emph{weight sharing} and improves the sample efficiency since only one common network must be trained instead of a network per agent.
-    \item This network takes as input a tensor constructed from the observation and puts it through a fully-connected layer. The output for this layer is than fed to a GRU. At every time step, the hidden state of the GRU is transformed via another fully-connected layer in to the policy and/or the estimated $V$ or $Q$-values, depending on the type of algorithm. The entire network for an actor-critic agent, which does both value estimation as policy prediction, is schematically represented in figure \ref{fig:agent_net}. 
+    \item This network takes as input a tensor constructed from the observation and puts it through a fully-connected layer. The output for this layer is than fed to a GRU. At every time step, the hidden state of the GRU is transformed via another fully-connected layer into the policy and/or the estimated $V$ or $Q$-values, depending on the type of algorithm. The entire network for an actor-critic agent, which does both value estimation as policy prediction, is schematically represented in figure \ref{fig:agent_net}. 
     \begin{figure}[htp]
         \centering
         \includegraphics[width=14cm]{images/agent_net2.png}
@@ -36,15 +36,15 @@ This section describes a couple of technical points about the implementation of 
             p(a_i | s) = \frac{e^{l_i}}{\sum_j e^{l_j}}
         \end{equation}
     \item In multi-agent settings, agents that have died no longer contribute to the game and the only action at their disposal is the {\tt do\_nothing} action. Care has been taken that for observations and actions that correspond to situations where the agent is dead are not used for the update process. Experiments have shown that neglecting to do this leads to inferior results.
-    \item In Q-learning based algorithms like IQL and QMIX, the policy is created with the $\epsilon$-greedy action selection mechanism as described in section \ref{sec:deep_qn}. The $\epsilon$-term is responsible for the trade-off between exploration and exploitation. To assure enough exploration in the beginning, $\epsilon$ is typically reduced during training from its initial value of $1$ to a low final value like $0.05$. How this decrease of $\epsilon$ is done is determined by a scheduler which computes for each step in the learning process the corresponding value of $\epsilon$. In this project, an linear scheduler has been used.
-    \item Algorithms of the Q-learning family, like IQL and QMIX, have more hyperparameters than algorithms from the policy gradient family due to the presence of a replay buffer and a target network. These hyperparameters includes the buffer and batch size, as well as the target synchronisation rate and the $\epsilon$ decay rate. This implies that searching an optimal combination of parameters becomes exponentially more difficult.
-    \item In order to account for random effects, the average of the different measurements should be computed over multiple runs. However, this would mean that runs have to be repeated several times and development would slow down significantly. For this reason, averages were computed by letting a window slide over a single run and averaging the measurements in this window. This can be justified by the fact that the learning rate is chosen small enough so that the weights of the network don't change significantly in this window\footnote{Technically, we assume that the signal is weakly stationary and the ergodic hypothesis thus holds}.
+    \item In Q-learning based algorithms like IQL and QMix, the policy is created with the $\epsilon$-greedy action selection mechanism as described in section \ref{sec:deep_qn}. The $\epsilon$-term is responsible for the trade-off between exploration and exploitation. To assure enough exploration in the beginning, $\epsilon$ is typically reduced during training from its initial value of $1$ to a low final value like $0.05$. How this decrease of $\epsilon$ is done is determined by a scheduler which computes for each step in the learning process the corresponding value of $\epsilon$. In this project, an linear scheduler has been used.
+    \item Algorithms of the Q-learning family, like IQL and QMix, have more hyperparameters than algorithms from the policy gradient family due to the presence of a replay buffer and a target network. These hyperparameters includes the buffer and batch size, as well as the target synchronisation rate and the $\epsilon$ decay rate. This implies that searching an optimal combination of parameters becomes exponentially more difficult.
+    \item In order to account for random effects, the average of the different measurements should be computed over multiple runs. However, this would mean that runs have to be repeated several times and development would slow down significantly. For this reason, rolling averages were computed by letting a window slide over a single run and averaging the measurements in this window. This can be justified by the fact that the learning rate is chosen small enough so that the weights of the network don't change significantly in this window\footnote{Technically, we assume that the signal is weakly stationary and the ergodic hypothesis thus holds}.
     \item In all experiments, we used the ADAM variant of stochastic gradient descent. While the learning rate $\alpha$ is adapted during training by the algorithm as explained in section \ref{sec:deep_learning}, the initial value that we have to set can have a big impact on the convergence of the overall algorithm.
 \end{itemize}
 
 \section{Initial Model}
-\subsection{Independent RL} % TODO bring IAC in line with definition of chapter 1
-\label{sec:iql_applied}
+\subsection{Independent RL}
+\label{sec:init_model_iql}
 This section discusses the application of IQL and IAC (section \ref{sec:intro_deep_indep_rl}) to the simple battlefield model described in section \ref{sec:first_model}. Two agents were trained with IQL and IAC (in casu the simple REINFORCE algorithm) on a 7-by-7 board against two opposing players who made random moves. The maximum range for all players was $5$ steps, so agents have to learn to approach other agents before firing. All training episodes were limited to maximum 100 steps.\\
 
 A comment on random opponents: agents that make random moves are indeed simple to beat; the final goal however is to work in an iterative fashion: 
@@ -138,12 +138,12 @@ Figure \ref{fig:simple_tactic01} shows how this is done. A white line between ag
 \label{fig:simple_tactic01}
 \end{figure}
 
-Next, we compare the learning curves of the three types of independent learning algorithms: (i) REINFORCE, (ii) Independent Actor-Critic (IAC) and (3) Independent Q-Learning (IQL). The resulting learning curves are represented in figure \ref{fig:compare_reward} for games where 2 learning agents play against 2 random agents.
+Next, we compare the learning curves of the three types of independent learning algorithms: (i) Independent REINFORCE just as above, (ii) Independent Actor-Critic, where REINFORCE is extended with a critic to estimate the state value and (3) Independent Q-Learning (IQL), where the policy is derived from the Q-value for each action in a state. The resulting learning curves are represented in figure \ref{fig:compare_reward} for games where 2 learning agents play against 2 random agents.
 
 \begin{figure}[htp]
     \centering
     \includegraphics[width=14cm]{images/experiment4/compare_reward.png}
-    \caption{Learning rate for REINFORCE, IAC and IQL for 2v2 games}
+    \caption{Learning rate for REINFORCE, Independent Actor-Critic and IQL for 2v2 games}
     \label{fig:compare_reward}
 \end{figure}
 
@@ -152,12 +152,12 @@ The following points are significant:
     \item Out of the 3 algorithms, REINFORCE works best.
     \item IQL initially goes in the wrong direction (i.e. makes wrong moves) before starting to improve the reward. This is caused by the high initial $\epsilon$ in the $\epsilon$-greedy action selection process which causes the behavior to be random instead of guided by the learned $Q$-values.
     \item Since IQL derives the policy from the learned $Q$-values, its behavior during learning undergoes significantly higher variation than REINFORCE. This is because gradual changes in $\hat Q$ can lead to suddenly preferring one action over another.
-    \item The learning curve of IAC is slower than those for REINFORCE and IQL. This is probably because IAC has to learn both a policy and value-estimation function at the same time.
-    \item IAC is highly dependent on the inclusion of an entropy-term to avoid the policy distribution from collapsing to a distribution that puts all probability mass on a single action.
+    \item The learning curve of Independent Actor-Critic is slower than those for REINFORCE and IQL. This is probably because this algorithm has to learn both a policy and value-estimation function at the same time.
+    \item Independent Actor-Critic is highly dependent on the inclusion of an entropy-term to avoid the policy distribution from collapsing to a distribution that puts all probability mass on a single action.
 \end{itemize}
 
-Independent REINFORCE definitely works best, and this has been confirmed by numerous experiments. IQL can be an alternative, but as mentioned above, many hyperparameters have to be tuned to achieve good performance. This point will also be addressed when discussing QMIX. IAC performs significantly worse than independent REINFORCE. Why this is the case shall be part of further investigations.\\
-In the next section the performance of QMIX will be compared against REINFORCE.
+Independent REINFORCE definitely works best, and this has been confirmed by numerous experiments. IQL can be an alternative, but as mentioned above, many hyperparameters have to be tuned to achieve good performance. This point will also be addressed when discussing QMix. Independent Actor-Critic performs significantly worse than independent REINFORCE. Why this is the case shall be part of further investigations.\\
+In the next section the performance of QMix will be compared against REINFORCE.
 
 \begin{comment}
 \textbf{TODO:} Rephrase the paragraph below.\\
@@ -187,28 +187,135 @@ While this modification might result in a theoretical improvement, this is not t
 %insert comparison PG (run ideapad 582) and IQL (run ideapad 590)
 \end{comment}
 
-\subsection{QMIX}
-As explained in section \ref{sec:intro_qmix}, QMIX is an algorithm of the Q-learning family that combines the Q-value estimate of the different agents into a $Q_{tot}$ such that $\frac{\partial Q_{tot}}{\partial Q_i} \geq 0$ for all agents $i$. This guarantees that when each agent chooses his best action $a_i$, the combined action set $[a_1 \ldots a_N]$ will also be the best possible joint action for the team.\\
-QMIX uses during training the state information $s_t$ to set the weights of the mixing network in figure \ref{fig:qmix_structure}. To do this, the state information was transformed in a tensor of size {\tt n\_agents x 5}, where each agent is represented by 5 items: his position $(x, y)$, whether he is still alive, his ammo level and at whom he is aiming at (if that is the case).\\
-Figure \ref{fig:comp_qmix_pg} compares the learning curve of REINFORCE with the one for QMIX.
+\subsection{QMix}
+\label{sec:init_model_qmix}
+As explained in section \ref{sec:intro_qmix}, QMix is an algorithm of the Q-learning family that combines the Q-value estimate of the different agents into a $Q_{tot}$ such that $\frac{\partial Q_{tot}}{\partial Q_i} \geq 0$ for all agents $i$. This guarantees that when each agent chooses his best action $a_i$, the combined action set $[a_1 \ldots a_N]$ will also be the best possible joint action for the team.\\
+QMix uses during training the state information $s_t$ to set the weights of the mixing network in figure \ref{fig:qmix_structure}. To do this, the state information was transformed in a tensor of size {\tt n\_agents x 5}, where each agent is represented by 5 items: his position $(x, y)$, whether he is still alive, his ammo level and at whom he is aiming at (if that is the case).\\
+Figure \ref{fig:comp_qmix_pg} compares the learning curve of REINFORCE with the one for QMix.
 % comparison 396-419
 \begin{figure}[htp]
     \centering
     \includegraphics[width=14cm]{images/experiment5/pg_v_qmix_simple.png}
-    \caption{QMIX vs independent REINFORCE in a simple environment}
+    \caption{QMix vs independent REINFORCE in a simple environment}
     \label{fig:comp_qmix_pg}
 \end{figure}
-Both algorithms convergence to a situation where the blue teams wins the large majority of its games. However, independent REINFORCE clearly works better, both in sample efficiency (since its curve is steeper) and in final result. Indeed, investigation of the resulting strategies didn't show anything better than REINFORCE produced. However, QMIX is an algorithm that encourages cooperation between agents and its advantages should become clearer when we look at the extended environment.\\
+Both algorithms convergence to a situation where the blue teams wins the large majority of its games. However, independent REINFORCE clearly works better, both in sample efficiency (since its curve is steeper) and in final reward which in average is much closer to $1$. Indeed, investigation of the resulting strategies didn't show anything better than REINFORCE produced. However, QMix is an algorithm that encourages cooperation between agents and its advantages should become clearer when we look at the extended environment.\\
 Experimentation has shown a few remarkable facts:
 \begin{enumerate}
-    \item The discount factor $\gamma$ is a critical parameter: policy gradient algorithms like REINFORCE and IAC require a high $\gamma$ (around $0.99$), while Q-learning based algorithms like IQL and QMIX only converge when $\gamma$ is lower ($0.8$ and below). A possible reason might be that PG algorithms base their update on a sequence of steps of a single episode, while Q-learning algorithms take random samples out a buffer of steps coming from multiple episodes. This means that the temporal effect of actions is more pronounced for PG and this can have an impact on the sensitivity on $\gamma$. However, this explanation has not been confirmed.
-    \item Convergence of QMIX is much better when the step penalty is increased and the maximum episode length is kept low. REINFORCE in turn has no problem to converge with a lower (or even zero) step penalty.
+    \item The discount factor $\gamma$ is a critical parameter: policy gradient algorithms like REINFORCE require a high $\gamma$ (around $0.99$), while Q-learning based algorithms like IQL and QMix only converge when $\gamma$ is lower ($0.8$ and below). A possible reason might be that PG algorithms base their update on a sequence of steps of a single episode, while Q-learning algorithms take random samples out a buffer of steps coming from multiple episodes. This means that the temporal effect of actions is more pronounced for PG and this can have an impact on the sensitivity on $\gamma$. However, this explanation has not been confirmed. The issue will be part of future research.
+    \item Convergence of QMix is much better when the step penalty is increased and the maximum episode length is kept low. REINFORCE in turn has no problem to converge with a lower (or even zero) step penalty.
 \end{enumerate}
 
 \section{Extended Model}
-This section describes the obtained results when the different algorithms are applied to the second model of which the characteristics were sketched in section \ref{sec:extended_model}.
+\label{sec:init_model_applied}
+This section describes the obtained results when the different algorithms are applied to the second model of which the characteristics were sketched in section \ref{sec:extended_model}.\\
+A new model also requires a couple of technical points that have to be addressed:
+\begin{itemize}
+    \item Environments can host a number of agents that is not predefined. This implies that the action space must be dynamical since the number of {\tt aim}-actions depends on the number of opposing agents. Hence the output of the policy- or Q-value network changes. This issue was already addressed in chapter \ref{ch:modelling}.
+    \item An additional requirement for being allowed to fire is that the opposing agent is visible, i.e. the line-of-sight is not blocked by an obstacle or other agent. This is communicated to the network by adding additional flags to the observation tensor, one flag per opponent that says whether he's visible or not.
+    \item The terrain is added to the observation. Since the terrain doesn't change during play, this information is not stored when generating the episodes because that would waste resources. The information is appended to the observation matrix when it is offered to the network.\\
+    For a board size $n$, this means an addition of $n^2$ elements to the input of the network, and thus also a severe increase in the number of network weights in the initial layer. This can be alleviated by using a convolutional network to process the board (containing both agents and terrain). This will be part of future research.
+\end{itemize}
+
 \subsection{Independent RL}
-\subsection{QMIX}
+REINFORCE works reasonably well with the extended model. Figure \ref{fig:pg_extended} shows both win rate and average length for REINFORCE applied to the extended model with a large obstacle in the middle (like in figure \ref{fig:simple_tactic02}) on a 15-by-15 board, which is more than 4 times larger than the simple model. 
+\begin{figure}[htp]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=8cm]{images/experiment6/pg_win_15.png}
+\end{minipage}%
+\begin{minipage}{.05\textwidth}
+\centering
+  \caption*{ }
+\end{minipage}%
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=8cm]{images/experiment6/pg_length_15.png}
+\end{minipage}
+\caption{Win rate and average game length for REINFORCE on extended model 15-by-15 board}
+\label{fig:pg_extended}
+\end{figure}
+It takes about $20000$ episodes to reach a $90\%$ win rate; compare this with figure \ref{fig:comp_qmix_pg} where REINFORCE requires about $6000$ episodes to reach the same level of wins. However, increasing the board size with a factor of $4$ entails an increase of the state-space size by a factor $\approx 4^4 = 256$ (since each of the $4$ players be placed on $4$ times as many tiles). In this light the increase in required samples seems reasonable.\\
+Another test is whether we can learn to win in a situation of 2 blue agents against 3 red ones, putting the blue team at a serious disadvantage. Figure \ref{fig:pg_extended2} shows both the win rate and the episode length for this situation. These curves show that winning in that situation is definitely possible - although still against random agents - but notice that (compare with \ref{fig:comp_qmix_pg}) the curve is a lot less steep, especially in the beginning. This would indicate that the algorithm needs a lot of episodes to figure out how to beat $3$ opponents with $2$ agents.
+
+\begin{figure}[htp]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=8cm]{images/experiment6/pg_win_2v3.png}
+\end{minipage}%
+\begin{minipage}{.05\textwidth}
+\centering
+  \caption*{ }
+\end{minipage}%
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=8cm]{images/experiment6/pg_length_2v3.png}
+\end{minipage}
+\caption{Win rate and average game length for REINFORCE on extended model 2v3 agents}
+\label{fig:pg_extended2}
+\end{figure}
+
+Figure \ref{fig:simple_tactic02} shows the play-out of a game ob a 7-by-7 board with that same large obstacle in the middle. The blue and red lines between agents represent the aiming action of resp. blue and red agents. The action that the agents choose to take based on the current observation are shown in the top left of each figure.
+
+\begin{figure}
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=6cm]{images/iteration/screenshot01.png}
+  \caption*{Initial positions with large obstacle in the middle of the board}
+\end{minipage}%
+\begin{minipage}{.1\textwidth}
+\centering
+  \caption*{ }
+\end{minipage}%
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=6cm]{images/iteration/screenshot02.png}
+  \caption*{Both blue agents take action to aim at $T2$}
+\end{minipage}
+%\end{figure}
+%\begin{figure}
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=6cm]{images/iteration/screenshot03.png}
+  \caption*{Both blue agents are aiming at $T2$ but are not allowed to fire; agent $T0$ moves north to clear line-of-sight}
+\end{minipage}%
+\begin{minipage}{.1\textwidth}
+\centering
+  \caption*{ }
+\end{minipage}%
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=6cm]{images/iteration/screenshot04.png}
+    \caption*{$T0$ moves closer to $T2$ to get in fire range; agent $T1$ switches aim to agent $T3$}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=6cm]{images/iteration/screenshot05.png}
+    \caption*{Both blue agents fire at opposing agents at the same time, killing both}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  %\includegraphics[width=7cm]{images/iteration/screenshot04.png}
+\end{minipage}
+\caption{A game with an obstacle}
+\label{fig:simple_tactic02}
+\end{figure}
+
+\subsection{QMix}
+Qmix works reasonably well on the extended model, as long as the board size is low. Once the board size becomes larger than $11$, it becomes very hard to get converge. For smaller board size, QMix gives quiet good results, as can been seen in figure \ref{fig:comp_qmix_pg2} where the learning curve for REINFORCE and QMix is compared on a 9-by-9 board with obstacles in the terrain (a figure which is the counterpart of figure \ref{fig:comp_qmix_pg}).
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=14cm]{images/experiment6/qmix_vs_pg_win_9.png}
+    \caption{QMix vs independent REINFORCE on a 9-by-9 board}
+    \label{fig:comp_qmix_pg2}
+\end{figure}
+
+Notice that although being slower, QMix still reaches the $90\%$ win rate in about $17000$ episodes, which is reasonably compared to REINFORCE. Nevertheless, the conclusion remains that QMix lacks scalability, an issue that has not been resolved.
 
 \section{Model Transfer}
 \label{sec:model_transfer}
@@ -224,14 +331,23 @@ In this way, we can swap the trained network from the blue team to the red one t
     \item Continue improving the blue team against the better opponent. Either start from a clean network or keep the already trained network. The former option might be useful to avoid getting stuck in a local minimum where the learned strategy is too brittle and only works in a limited number of cases. The latter option is obviously more sample efficient.
     \item Go back to step 2.
 \end{enumerate}
-
+Going forward, all figures were produced on a 7-by-7 board with teams of 2 agents and a terrain containing several obstacles.\\
+Figure \ref{fig:iteration} shows the win rate for both blue and red teams where after each 5000 episodes the network was transferred to the red team and the agents from the blue team restart training as random agents. The performance loss for the blue team - and the corresponding performance gain for the red team - is clearly visible every 5000 episode cycle. During some cycles (e.g. from episode 10000 to 15000) it is hard to overcome the opponent while during other cycles the blue team easily overcomes the red one (e.g. from episode 15000 to 20000).\\
 \begin{figure}[htp]
     \centering
     \includegraphics[width=14cm]{images/iteration/iterative.png}
     \caption{Sequence of model transfers from team blue to team red}
     \label{fig:iteration}
 \end{figure}
-Figure \ref{fig:iteration} shows the win rate for both blue and red teams where after each 5000 episodes the network was transferred to the red team and the agents from the blue team restart training as random agents. During some cycles (e.g. from episode 10000 to 15000) it is hard to overcome the opponent while during other cycles the blue team easily overcomes the red one (e.g. from episode 15000 to 20000).
+Figure \ref{fig:iterative_qmix} is a rather striking example of the transfer of a QMix model from blue to red whilst keeping the model for the blue team. A word of caution: this simulation ran for 60000 episodes, but a performance evaluation was only done every 10 episodes thus the x-axis reports only 6000 episodes (actually a bit less because of the moving-window averaging with window size $=400$).
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=14cm]{images/iteration/iterative_qmix.png}
+    \caption{Sequence of model transfers for QMix - no network reset}
+    \label{fig:iterative_qmix}
+\end{figure}
+It is clear when the red team receives a new network since the performance briefly flares up. However, the blue performance remains relatively high during the entire sequence a part from the occasional drop when the blue network is shared.
+
 
 
 

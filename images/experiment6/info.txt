@@ -1,0 +1,2 @@
+on desktop: runs = {619: 'PG'} board_size = 15
+            runs = {642: 'PG'} 2v3
