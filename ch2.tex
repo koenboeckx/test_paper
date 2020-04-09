@@ -14,7 +14,7 @@ A mathematical - or algorithmic - model has two goals:
 An important question is which level of detail we aspire to. As in all simulations, this must be a trade-off between making something as simple as possible to reduce computational complexity, and retain enough details to make it realistic and useful. To work towards this equilibrium, two versions of the model were developed with increasing level of complexity.\\
 A model consists of two parts:
 \begin{enumerate}
-    \item The \emph{environment}, which contains the terrain and imposes the rules of the game. The environment keeps at all times a global state of the game which encapsulates all relevant knowledge about the current situation. The rules of the game determine which actions are allowed in which circumstances and what the next state will be when an action $a$ is taken in a state $s$. The environment thus implements the transition probability $p(s'|s, a)$. It also provides a reward for each agent.
+    \item The \emph{environment}, which contains the terrain and imposes the rules of the game. The environment keeps at all times a global state of the game which encapsulates all relevant knowledge about the current situation. The rules of the game determine which actions are allowed in which circumstances and what the next state $s'$ will be when an action $a$ is taken in a state $s$. The environment thus implements the transition probability $p(s'|s, a)$. It also provides a reward for each agent.
     \item The \emph{agents} that are present. Agents will be part of a \emph{team}, in our case team "\textcolor{blue}{blue}" and team "\textcolor{red}{red}". Only the agents of team blue are learning agents. The agents interact with the environment through their actions and receive observations.
 \end{enumerate}
 This formalism is completely in line with the reinforcement learning paradigm as sketched in figure \ref{fig:mdp}. At the same time, all forms of the game subscribe to the multi-agent formalism for Markov games, as defined in section \ref{sec:intro_marl}.
@@ -34,7 +34,7 @@ The global state $\bm{s_t}$ is then a tuple $(s_t^0, s_t^1, s_t^2, s_t^3) \in \b
 Each agent can choose among $8$ actions:
 \begin{enumerate}
     \item {\tt do\_nothing}\\
-        As the name says, the agent does nothing and it's state vector $s^i$ doesn't change.
+        As the name says, the agent does nothing and its state vector $s^i$ doesn't change.
     \item {\tt aim0} \\
         Aims at the first tank of the opposing player and thus changes the {\tt aim} variable of its state vector. The agent must be alive to be able to execute this action.
     \item {\tt aim1} \\
@@ -54,7 +54,7 @@ All agents receive an observation from the environment that is based on the glob
     \item The relative position of his team mate and of the opposing agents, if they are still alive.
 \end{itemize}
 This implies that an agent does not know the ammo situation of other agents nor if any of the opposing agents is aiming and at whom. This is a design choice to mimic a realistic situation.\\
-An advantage of this kind of representation is that is is defined from the view point of the agent itself thanks to e.g. the choice to communicate the position of others relative to the agents own position. This will allow us to share networks among agents from the same which greatly increases sample efficiency and transferability of models, two advantages that will be discussed in chapter \ref{ch:impl_eval}.\\
+An advantage of this kind of representation is that it is defined from the view point of the agent itself thanks to e.g. the choice to communicate the position of others relative to the agents own position. This will allow us to share networks among agents from the same which greatly increases sample efficiency and transferability of models, two advantages that will be discussed in chapter \ref{ch:impl_eval}.\\
 Figure \ref{fig:game_visual} shows a standard visualization of the game, where tanks of the blue team are both dead (they are "greyed out").
 
 \begin{figure}[htp]

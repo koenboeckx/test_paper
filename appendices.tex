@@ -169,6 +169,120 @@ def train():
 
 \chapter{QMix}
 \label{app:qmix}
+\begin{minted}{python}
+
+class QMIXAgent(Agent):
+
+    def act(self, obs, test_mode=False):
+        "Select an action based on an observation"
+        unavail_actions = self.env.get_unavailable_actions()[self]
+        avail_actions = [action for action in self.actions
+                        if action not in unavail_actions]
+
+        qvals, self.hidden_state = self.model(obs, self.hidden_state)
+        # remove unavailable actions
+        for action in unavail_actions:
+            qvals[0][action.id] = -np.infty
+        action_idx = qvals.max(1)[1].item() # pick position of maximum
+    
+        if test_mode: # when in test_mode, always return 'best' action
+            return self.actions[action_idx]
+        
+        # epsilon-greedy action selection
+        eps = self.scheduler()
+        if random.random() < eps:
+            return random.choice(avail_actions)
+        else:
+            return self.actions[action_idx]
+
+class MultiAgentController:
+    """ Controls the different learning agents
+        and their update process
+    """
+    def __init__(self, env, agents, models):
+        # ...
+        
+        # create mixing network
+        self.mixer        = QMixer()
+        self.target_mixer = copy.deepcopy(self.mixer)
+        self.sync_networks()
+        self.parameters = list(self.model.parameters())
+        self.parameters += list(self.mixer.parameters())
+        self.optimizer = torch.optim.Adam(self.parameters, lr=lr)
+
+    def update(self, batch):
+        "Perform one update step according to the QMix algorithm"
+        batch_size = len(batch)
+        states, next_states, observations, next_obs, hidden, next_hidden, actions,\
+            rewards, dones, unavail = self._build_inputs(batch)
+        
+        # reshape observations & hidden states to push them through network models
+        observations = observations.reshape(batch_size * len(self.agents), -1)
+        next_obs = next_obs.reshape(batch_size * len(self.agents), -1)
+        hidden = hidden.reshape(batch_size * len(self.agents), -1)
+        next_hidden = next_hidden.reshape(batch_size * len(self.agents), -1)
+        
+        # compute & reshape estimated Q-values
+        current_q_vals,   _ = self.model(observations, hidden)
+        predicted_q_vals, _ = self.target(next_obs, next_hidden)
+        current_q_vals = current_q_vals.reshape(batch_size, len(self.agents), -1)
+        predicted_q_vals = predicted_q_vals.reshape(batch_size, len(self.agents), -1)
+
+        # gather q-vals corresponding to the actions taken
+        current_q_vals_actions = current_q_vals[range(batch_size * len(self.agents))
+                                                , actions.reshape(-1)]
+
+        predicted_q_vals[unavail==1] = -1e10 # set unavailable actions to low value
+        
+        # pick maximum Q-value for Bellman update
+        predicted_q_vals_max = predicted_q_vals.max(2)[0]
+        
+        # use mixer to mix all Q-vals
+        current_q_tot   = self.mixer(current_q_vals_actions, states)
+        predicted_q_tot = self.target_mixer(predicted_q_vals_max, next_states)
+        
+        # Bellman update
+        target = rewards + gamma * (1. - dones) * predicted_q_tot
+        td_error = current_q_tot - target
+        loss = (td_error ** 2).mean()
+
+        # Perform update
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return loss.item()
+    
+    def sync_networks(self):
+        self.target.load_state_dict(self.model.state_dict())
+        self.target_mixer.load_state_dict(self.mixer.state_dict())
+        
+def train():
+    team_blue = [QMIXAgent() for idx in range(n_friends)] 
+    team_red  = [Agent()     for idx in range(n_enemies)] 
+    training_agents = team_blue
+    agents = team_blue + team_red
+    env = Environment(agents, args)
+
+    models = generate_models(n_inputs, n_actions)
+    for agent in training_agents:
+        agent.set_model(models)
+
+    buffer = ReplayBuffer(size=buffer_size)
+    mac = MultiAgentController(env, training_agents, models)
+    for step_idx in range(n_steps):
+        episode = generate_episode(env)
+        buffer.insert_list(episode)
+        if len(buffer) < batch_size:
+            continue
+        batch = buffer.sample(batch_size)
+        
+        loss = mac.update(batch)
+        
+        # synchronize target networks 
+        if step_idx % args.sync_interval == 0:
+            mac.sync_networks()
+\end{minted}
 
 \end{appendices}
 
