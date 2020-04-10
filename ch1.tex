@@ -4,7 +4,7 @@
 This chapter briefly explains the different algorithms used in this work. How they are used and what their purpose is for this thesis will be explained in chapter \ref{ch:impl_eval}.\\
 All the algorithms are part of a family of algorithms that can be viewed as \emph{machine learning} (ML). Instead of telling a computer what to do to perform a specific task by using explicit instructions, the computer has to learn to correct his behavior based on examples and inference. ML is traditionally divided into 3 subcategories:
 \begin{itemize}
-    \item \emph{Supervised learning}, where we feed the algorithm with both the input and the correct output so that it can learn based on the predicted and correct output,
+    \item \emph{Supervised learning}, where we feed the algorithm with both the input and the correct output so that it can learn based on the predicted and expected output value,
     \item \emph{Unsupervised learning}, where the algorithms learns to classify items based on their underlying distribution alone (and thus without being given the correct answer),
     \item \emph{Reinforcement learning}, where there are no input/output examples available but the computer receives nevertheless a signal indicating how good or bad his decision was.
 \end{itemize}
@@ -308,16 +308,13 @@ A popular implementation of this paradigm is \emph{Adam} \cite{kingma2014adam}, 
 %----------------------------------------------------------------------------
 \subsubsection{Convolutional Neural Networks}
 A \emph{Convolutional Neural Network} (CNN) \cite{lecun1989backpropagation} is a specific instance of an artificial neural network where several square windows `glide` over an image and at each position the covered pixels are multiplied by the window weights and summed. This operation is called a \emph{convolution}. These kind of networks are very well suited for processing images since they implicitly capture that the salient characteristics (forms, colors, texture, \ldots) of objects in images are invariant to translations.\\
-
 The typical structure of a CNN used for classification is shown in figure \ref{fig:typical_cnn}. The input is an image of a robot. This image has a height and width (in number of pixels) and three color channels. Several convolutional windows process the image as described above and create a set of \emph{feature maps}. One of these maps might be for example the vertical edges, another the horizontal \ldots. The important thing is that the coefficients of these windows are learned by the system, and not defined by the user. Other elements however, like the size and number of these windows are part of the network architecture and must be defined by the programmer. \\
-
 \begin{figure}[htp]
     \centering
     \includegraphics[width=14cm]{images/typical_cnn.png}
     \caption{Structure of a typical CNN}
     \label{fig:typical_cnn}
 \end{figure}
-
 After the convolutions typically follows a subsampling phase, where for a window of pixels only the one with the maximum value is retained (\emph{max-pooling}) and which will reduce the computational overhead. Another sequence of convolutions and subsampling leads to a final set of feature maps. The idea is to learn more complex features as we move up in to hierarchy, going form edges to textures to parts of objects to complete objects. These feature maps are then reduced to a single vector which will be processed by a more traditional multi-layer network (a sequence of fully-connected layers).\\
 %----------------------------------------------------------------------------
 \subsubsection{Recurrent Neural Networks}
@@ -449,7 +446,7 @@ A particular issue with multi-agent learning is the challenge of multi-agent \em
 \subsection{Independent Multi-Agent Learning}
 \label{sec:intro_deep_indep_rl}
 The simplest MARL algorithm, Independent Q-Learning (IQL) \cite{tan1993multi} simply ignores the multi-agent setting, and lets each learning agent $i$ train an state-action value function $Q_i(s, a_i)$ independently of the other agents. As such, this is just a simple extension of single-agent learning. Multiple agents always outperform a single agent because they have more resources and a better chance for receiving rewards. However, the true advantage from a multi-agent setting comes from cooperation between agents, something that is not addressed with this method. More implementation details on how the training of a set of agents with Independent Q-Learning is done can be found in appendix \ref{app:iql}.\\
-Another algorithm along the same line is Independent Actor Critic (IAC), where the agents are trained independently with a DPG algorithm like REINFORCE or A2C. Both IQL and IAC have been implemented as part of this thesis. The goal is to provide a baseline against which other algorithms can be compared.
+Another algorithm along the same line is Independent Actor Critic (IAC), where the agents are trained independently with a DPG algorithm like REINFORCE or A2C. Both IQL and IAC have been implemented as part of this thesis. The goal is to provide a baseline against which other algorithms can be compared. An example implementation of IAC is given in appendix \ref{app:iac}.
 
 %----------------------------------------------------------------------------
 %\subsection{Minimax Q-learning}
@@ -488,7 +485,8 @@ This algorithm has two advantages compared with IQL and even VDN:
 \begin{enumerate}
     \item It combines the estimated $Q$-value of the different agents into a new $Q_{tot}$ that is a non-linear combination of the individual $Q$-values. By doing this, the algorithm will prefer actions that are good for the collective instead of just being good for individual agents. The idea is that this encourages the agents to cooperate. This could then result in emerging strategies that require interaction between agents.
     \item During training, this combined $Q_{tot}$ is computed by taking all state information into account. However, during execution, this state information is no longer available but it isn't needed, since the action selection is only based on the past and the current observation for each individual agent. This is an example of the centralised learning - decentralised execution paradigm \cite{oliehoek2008optimal}.
-\end{enumerate} 
+\end{enumerate}
+Appendix \ref{app:qmix} shows how QMix is implemented.\\
 Several other centralised learning - decentralised execution algorithms have been proposed in recent years. The most prominent example is \emph{Counterfactual Multi-Agent Policy Gradients} (COMA) \cite{foerster2018counterfactual} which is an algorithm of the policy gradient family. While the initial goal was to also implement this algorithm, this has been abandoned due to time constraints.
 
 %----------------------------------------------------------------------------

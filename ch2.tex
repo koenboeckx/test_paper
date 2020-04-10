@@ -17,7 +17,7 @@ A model consists of two parts:
     \item The \emph{environment}, which contains the terrain and imposes the rules of the game. The environment keeps at all times a global state of the game which encapsulates all relevant knowledge about the current situation. The rules of the game determine which actions are allowed in which circumstances and what the next state $s'$ will be when an action $a$ is taken in a state $s$. The environment thus implements the transition probability $p(s'|s, a)$. It also provides a reward for each agent.
     \item The \emph{agents} that are present. Agents will be part of a \emph{team}, in our case team "\textcolor{blue}{blue}" and team "\textcolor{red}{red}". Only the agents of team blue are learning agents. The agents interact with the environment through their actions and receive observations.
 \end{enumerate}
-This formalism is completely in line with the reinforcement learning paradigm as sketched in figure \ref{fig:mdp}. At the same time, all forms of the game subscribe to the multi-agent formalism for Markov games, as defined in section \ref{sec:intro_marl}.
+This formalism is in line with the reinforcement learning paradigm as sketched in figure \ref{fig:mdp}. At the same time, all forms of the game subscribe to the multi-agent formalism for Markov games, as defined in section \ref{sec:intro_marl}.
 
 %---------------------------------------------------------------------------------------
 \section{Initial Model}
@@ -54,7 +54,7 @@ All agents receive an observation from the environment that is based on the glob
     \item The relative position of his team mate and of the opposing agents, if they are still alive.
 \end{itemize}
 This implies that an agent does not know the ammo situation of other agents nor if any of the opposing agents is aiming and at whom. This is a design choice to mimic a realistic situation.\\
-An advantage of this kind of representation is that it is defined from the view point of the agent itself thanks to e.g. the choice to communicate the position of others relative to the agents own position. This will allow us to share networks among agents from the same which greatly increases sample efficiency and transferability of models, two advantages that will be discussed in chapter \ref{ch:impl_eval}.\\
+An advantage of this kind of representation is that it is defined from the view point of the agent itself thanks to e.g. the choice to communicate the position of others relative to the agents own position. This will allow us to share networks among agents from the same team which greatly increases sample efficiency and transferability of models, two advantages that will be discussed in chapter \ref{ch:impl_eval}.\\
 Figure \ref{fig:game_visual} shows a standard visualization of the game, where tanks of the blue team are both dead (they are "greyed out").
 
 \begin{figure}[htp]
@@ -75,7 +75,7 @@ The goal of extending the model is to make it more realistic while still keeping
     \item More than 2 vs. 2 agents.
     \item Complex terrain where both visibility and mobility are blocked by obstacles.
     \item Larger state space, where e.g. fuel is limited.
-    \item More complex firing probability, e.g. an exponentially decreasing probability based on distance between shooter and target.
+    \item More complex firing probability, e.g. an exponentially decreasing hit probability based on distance between shooter and target.
 \end{enumerate}
 Since time for this thesis was limited, only the second and third option were retained; the others will be explored in future research.\\
 This means that the second model is a model where the agents all have the same capabilities as before but the number of agents of both teams can be chosen freely and is not limited. Furthermore, we'll take into account the terrain which consists of free space and obstacles.\\

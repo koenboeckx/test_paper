@@ -99,7 +99,7 @@ In this simple scenario, the agents have learned to (in this order):
     \item Come closer until the opposing agent is in range.
     \item Fire once the opposing agent is in range.
 \end{enumerate}
-Figure \ref{fig:simple_tactic01} shows how this is done. A line between agents means one agent is aiming at the other. The actions taken by the four agents is shown in the top left corners.
+Figure \ref{fig:simple_tactic01} shows how this is done. A line between agents means one agent is aiming at the other. The actions taken by the four agents are shown in the top left corners.
 
 %\includemovie{8cm}{8cm}{images/tactic01.gif}
 % \begin{frame}{}
@@ -140,7 +140,7 @@ Figure \ref{fig:simple_tactic01} shows how this is done. A line between agents m
 
 \end{comment}
 
-\begin{figure}
+\begin{figure}[htp]
 \centering
 \begin{minipage}{.45\textwidth}
   \centering
@@ -187,7 +187,8 @@ Figure \ref{fig:simple_tactic01} shows how this is done. A line between agents m
 \label{fig:simple_tactic01}
 \end{figure}
 
-The next steps consists of comparing the learning curves of the three types of independent learning algorithms: (i) Independent REINFORCE just as above, (ii) Independent Actor-Critic, where REINFORCE is extended with a critic to estimate the state value and (3) Independent Q-Learning (IQL), where the policy is derived from the Q-value for each action in a state. The resulting learning curves are represented in figure \ref{fig:compare_reward}.
+\subsubsection*{Comparison}
+The next step consists of comparing the learning curves of the three types of independent learning algorithms: (i) Independent REINFORCE just as above, (ii) Independent Actor-Critic, where REINFORCE is extended with a critic to estimate the state value and (iii) Independent Q-Learning (IQL), where the policy is derived from the Q-value for each action in a state. The resulting learning curves are represented in figure \ref{fig:compare_reward}.
 
 \begin{figure}[htp]
     \centering
@@ -259,7 +260,7 @@ Experimentation has shown a few remarkable facts:
 \section{Extended Model}
 \label{sec:init_model_applied}
 This section describes the obtained results when the different algorithms are applied to the second model of which the characteristics were sketched in section \ref{sec:extended_model}.\\
-A new model also requires a couple of technical points that have to be addressed:
+A new model also requires that a couple of technical points be addressed:
 \begin{itemize}
     \item Environments can host a number of agents that is not predefined. This implies that the action space must be dynamical since the number of {\tt aim}-actions depends on the number of opposing agents. Hence the number of outputs of the policy- or Q-value network changes. This issue was already addressed in chapter \ref{ch:modelling}.
     \item An additional requirement for being allowed to fire is that the opposing agent is visible, i.e. the line-of-sight is not blocked by an obstacle or other agent. This is communicated to the network by adding additional flags to the observation tensor, one flag per opponent that says whether he's visible or not.
