@@ -1,12 +1,13 @@
 \documentclass{beamer}
 %\usetheme{Boadilla}
-%\usetheme{Darmstadt}
+\usetheme{Darmstadt}
 %\usetheme{Berkeley}
 %\usetheme{Berlin}
 %\usetheme{Copenhagen}
-\usetheme{Warsaw}
+%\usetheme{Warsaw}
 
 \DeclareMathOperator*{\argmax}{arg\,max} % Jan Hlavacek
+\usepackage{comment} % for block commenting (\begin{comment})
 
 \title{Developing Strategies with Reinforcement Learning}
 \subtitle{FCOS Short Version}
@@ -14,6 +15,7 @@
 \date{April 27, 2020}
 
 \begin{document}
+\setbeamertemplate{caption}{\raggedright\insertcaption\par} % removes 'Figure:' in figure captions
 
 \begin{frame}
 \titlepage
@@ -24,16 +26,6 @@
 \end{frame}
 
 \section{Introduction}
-\begin{frame}
-\frametitle{Introduction}
-\begin{itemize}
-    \item What is Multi-Agent (MA) learning
-    \item What is Reinforcement Learning (RL)?
-    \item How do we combine both?
-    \item What am I working on?
-    \item Where can you work on?
-\end{itemize}
-\end{frame}
 
 \begin{frame}
 \frametitle{The IRIS Project}
@@ -56,7 +48,7 @@
 \begin{block}{1. Battlefield Modelling}
 \begin{itemize}
     \item An algorithm that simulates a real environment
-    \item Simple enough to use
+    \item \alert{Simple} enough to use
     \item Realistic enough to be useful
 \end{itemize}
 \end{block}
@@ -106,28 +98,45 @@
 \begin{itemize}
     \item Estimate the value $Q(s,a) $ of taking action $a$ in state $s$
     \item Derive a policy from this estimated value: $\pi_{*}(s) = \argmax_{a} Q(s, a)$
-    \item \emph{Q-learning}: derive $Q(s,a)$ with Bellman equation
+    \item \emph{Q-learning}: derive $Q(s,a)$ with \emph{Bellman equation}
 \end{itemize}
 \end{block}
 
 \begin{block}{Policy approximation}
 \begin{itemize}
     \item Learn the optimal policy $\pi_{*}$ directly
+    \item Policies are determined parameters $\theta$
     \item Update the policy parameters with the \emph{policy gradient theorem}
     \item $\bm{\theta}_{t+1} = \bm{\theta}_t + \alpha \, G_t \, \frac{\nabla_{\bm{\theta}_t} \pi(A_t|S_t, \bm{\theta}_t)}{\pi(A_t|S_t, \bm{\theta}_t)}$
+    \item {\tt REINFORCE}, Actor-Critic
 \end{itemize}
 \end{block}
 \end{frame}
 
 \begin{frame}
 \frametitle{Deep Reinforcement Learning}
-\begin{itemize}
+\begin{block}{Problem}
+    \begin{itemize}
     \item Classical RL algorithms work with tables that store $Q$-values or policies
     \item This is no longer feasible when the state space becomes large
-    \pause
-    \item Solution: work with function approximators $f(s; \theta)$
-    \item \emph{Deep Learning}: artificial neural networks as function approximators
-\end{itemize}
+    \begin{itemize}
+        \item Table too large
+        \item Can't explore each state
+    \end{itemize}
+     \end{itemize}
+\end{block}
+\pause
+\begin{block}{Solution}
+    \begin{itemize}
+    \item Work with function approximators $f(s; \theta)$
+    \begin{itemize}
+        \item Store weights $\theta$
+        \item Generalize beyond encountered states
+    \end{itemize}
+            
+    \item \alert{Deep Learning}: artificial neural networks as function approximators
+    \end{itemize}
+\end{block}
 \end{frame}
 
 \begin{frame}
@@ -137,13 +146,13 @@
 \begin{figure}[htp]
     \centering
     \includegraphics[scale=0.1]{images/neuron.jpeg}
-    \caption{A Neuron}
+    \caption{An artificial neuron}
 \end{figure}
 \column{0.5\textwidth}
 \begin{figure}[htp]
     \centering
     \includegraphics[scale=0.3]{images/neural_net.png}
-    \caption{A Neural Net}
+    \caption{A neural network}
 \end{figure}
 \end{columns}
 \end{frame}
@@ -153,7 +162,7 @@
 \begin{block}{Deep Q-networks}
 \begin{itemize}
     \item Use a neural net to estimate the value of a state $S$
-    \item Loss function $\mathcal{L} = \big [R_t + \gamma \max_{A'} Q(S_{t+1}, A';\, \bm{\theta}) - Q(S_t, A_t); \theta \big ]^2$
+    \item Loss function $\mathcal{L} = \color{red} \big [R_t + \gamma \max_{A'} Q(S_{t+1}, A';\, \bm{\theta}) \color{black} - \color{blue} Q(S_t, A_t) \color{black}; \theta \big ]^2$
 \end{itemize}
 \end{block}
 \begin{block}{Deep Policy Gradients}
@@ -214,8 +223,225 @@
 \end{frame}
 
 \section{Modelling the battlefield}
-\begin{frame}
-...
+\begin{frame}{Modelling the battlefield}
+\begin{block}{An algorithmic model}
+\begin{itemize}
+    \item A piece of software that simulates a battlefield
+    \item Multiple agents on a terrain with obstacles, each agent can take certain actions
+    \item Agents can shoot at one another; if in range $\rightarrow$ kill
+    \item The environment enforces constraints:
+        \begin{itemize}
+            \item Don't fire when not aiming
+            \item Don't fire when opponent is not visible
+            \item Don't pass through obstacles
+            \item \ldots
+        \end{itemize}
+    \item The environment takes the actions of the agents and changes state.
+    \item Afterwards, the environment returns an \emph{observation} to agents
+\end{itemize}
+\end{block}
+
+% TODO: explain why: (1) generate episodes
+%                    (2) explicit about simplifications
+\end{frame}
+
+\begin{frame}{Modelling the battlefield}
+\begin{figure}[htp]
+    \centering
+    \includegraphics[scale=0.3]{images/game_visual.png}
+\end{figure}
+\end{frame}
+
+\section{Results}
+\begin{frame}{Independent RL}
+\begin{columns}
+\column{0.7\textwidth}
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiment4/compare_reward.png}
+\end{figure}
+
+\column{0.4\textwidth}
+\begin{block}{Comparison}
+\begin{itemize}
+    \item REINFORCE is best
+    \item IQL works but is lower and has higher variance
+    \item IAC is inferior
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+
+
+\begin{frame}{QMix}
+\begin{columns}
+\column{0.7\textwidth}
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\textwidth]{images/experiment6/qmix_vs_pg_win_9.png}
+\end{figure}
+\column{0.4\textwidth}
+\begin{block}{Comparison}
+\begin{itemize}
+    \item QMix works quite well
+    \item However, REINFORCE has better sample-efficiency
+    \item QMix doesn't scale to larger board sizes
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Model Transfer}
+\begin{columns}
+
+\column{0.5\textwidth}
+\begin{itemize}
+    \item Playing against random agents is not that hard
+    \item Idea:
+        \begin{enumerate}
+            \item Train for number of steps
+            \item Transfer trained model to opponents
+            \item Continue training against better opponents
+        \end{enumerate}
+    \item Finally, obtain good strategy
+\end{itemize}
+
+\column{0.6\textwidth}
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=\textwidth]{images/iteration/iterative.png}
+\end{figure}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}{Game play - example 1}
+\begin{columns}
+\column{0.3\textwidth}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/animation03/screenshot01.png}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/animation03/screenshot04.png}
+\end{figure}
+
+\column{0.3\textwidth}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/animation03/screenshot02.png}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/animation03/screenshot05.png}
+\end{figure}
+
+\column{0.3\textwidth}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/animation03/screenshot03.png}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/animation03/screenshot99.png}
+\end{figure}
+
+\end{columns}
+\end{frame}
+
+\begin{frame}{Game play - example 2}
+\begin{columns}
+\column{0.3\textwidth}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/iteration/screenshot01.png}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/iteration/screenshot04.png}
+\end{figure}
+
+\column{0.3\textwidth}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/iteration/screenshot02.png}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/iteration/screenshot05.png}
+\end{figure}
+
+\column{0.3\textwidth}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=\textwidth]{images/iteration/screenshot03.png}
+\end{figure}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[scale=0.5]{images/iteration/screenshot07.png}
+\end{figure}
+
+\end{columns}
+\end{frame}
+
+\section{Future Work}
+\begin{frame}{Future Work}
+\begin{block}{Problem is hard}
+    \begin{itemize}
+        \item \alert{Sparse rewards}: only at end of episode\\
+               Solution: Reward shaping
+        \pause
+        \item \alert{Delayed rewards}: effect of good actions only later visible\\
+              Solution: identify good actions, give them higher weight
+        \pause
+        \item \alert{Shared rewards}: which agent is responsible for win/loss?
+        \pause
+        \item \alert{Generalization}: opponents \& terrain
+    \end{itemize}
+\end{block}
+    \pause
+\begin{block}{Other improvements}
+    \begin{itemize}
+        \item Other network architecture
+        \item Better (more realistic) model
+        \item Other Multi-Agent algorithms
+        \item Real-time ?
+    \end{itemize}
+\end{block}
+\end{frame}
+
+\section{Conclusions}
+\begin{frame}{Conclusions}
+\begin{block}{Modelling}
+\begin{itemize}
+    \item Algorithmic model of battlefield was developed
+    \item This model is ready to be extended and to be made more realistic
+\end{itemize}
+\pause
+\end{block}
+\begin{block}{Algorithms}
+\begin{itemize}
+    \item A number of multi-agent RL algorithms have been explored
+    \item Some of these algorithms give quite good results
+    \item Others didn't live up to expectations
+\end{itemize}
+\end{block}
+\pause
+More research is needed:
+\begin{itemize}
+    \item Realistic models
+    \item Better algorithms
+    \item Feedback from people in the field
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Questions?}
+\begin{center}
+Thank you for your attention.\\
+\Huge Any questions?
+\end{center}
 \end{frame}
 
 \end{document}
