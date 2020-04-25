@@ -8,6 +8,16 @@
 
 \DeclareMathOperator*{\argmax}{arg\,max} % Jan Hlavacek
 \usepackage{comment} % for block commenting (\begin{comment})
+\defbeamertemplate{footline}{left page number}
+{%
+  %\hspace*{\fill}%
+  \hspace*{0.5cm}%
+  \usebeamercolor[fg]{page number in head/foot}%
+  \usebeamerfont{page number in head/foot}%
+  \insertpagenumber\,/\,\insertpresentationendpage%
+  \hspace*{\fill}\vskip2pt%
+}
+\setbeamertemplate{footline}[left page number]
 
 \title{Developing Strategies with Reinforcement Learning}
 \subtitle{FCOS Short Version}
@@ -32,7 +42,8 @@
 \begin{block}{Intelligent Recognition Information System}
 \begin{itemize}
     \item Piloted by \emph{John Cockerill Defence}
-    \item Funding provided by Walloon governement
+    \item Funding provided by Walloon government
+    \item Crews of armoured vehicles are small and do need to process a lot of information about the environment
     \item Goal: develop a pipeline from observation to action suggestion on board of armoured vehicles
     %\item I've worked on strategy development
 \end{itemize}
@@ -48,7 +59,7 @@
 \begin{block}{1. Battlefield Modelling}
 \begin{itemize}
     \item An algorithm that simulates a real environment
-    \item \alert{Simple} enough to use
+    \item Simple enough to use
     \item Realistic enough to be useful
 \end{itemize}
 \end{block}
@@ -57,6 +68,7 @@
 \begin{itemize}
     \item Use \emph{Reinforcement Learning} to develop strategies
     \item Assess performance of different RL algorithms
+    \item Use battlefield model to generate episodes
 \end{itemize}
 \end{block}
 \end{frame}
@@ -69,6 +81,7 @@
 \begin{alertblock}{Reinforcement Learning}
 \begin{itemize}
     \item Learn a policy $\pi$ through interaction with environment
+    \item Policy $\pi(a | s)$: given state $s$, returns action $a$
     \item No explicit examples, just a reward signal
 \end{itemize}
 
@@ -80,13 +93,13 @@
 \column{0.5\textwidth}
 \begin{block}{Markov Decision Process}
 \begin{itemize}
+    \item Only state is needed to encode all information
     \item Agent takes actions based on state
     \item Based on action, the environment changes state and returns reward
     \item Goal: maximize cumulative reward $G_t$
     \begin{equation*}
         G_t &= \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
     \end{equation*}
-    \item Discount factor $\gamma$
 \end{itemize}
 \end{block}
 \end{columns}
@@ -107,7 +120,7 @@
     \item Learn the optimal policy $\pi_{*}$ directly
     \item Policies are determined parameters $\theta$
     \item Update the policy parameters with the \emph{policy gradient theorem}
-    \item $\bm{\theta}_{t+1} = \bm{\theta}_t + \alpha \, G_t \, \frac{\nabla_{\bm{\theta}_t} \pi(A_t|S_t, \bm{\theta}_t)}{\pi(A_t|S_t, \bm{\theta}_t)}$
+    %\item $\bm{\theta}_{t+1} = \bm{\theta}_t + \alpha \, G_t \, \frac{\nabla_{\bm{\theta}_t} \pi(A_t|S_t, \bm{\theta}_t)}{\pi(A_t|S_t, \bm{\theta}_t)}$
     \item {\tt REINFORCE}, Actor-Critic
 \end{itemize}
 \end{block}
@@ -162,7 +175,7 @@
 \begin{block}{Deep Q-networks}
 \begin{itemize}
     \item Use a neural net to estimate the value of a state $S$
-    \item Loss function $\mathcal{L} = \color{red} \big [R_t + \gamma \max_{A'} Q(S_{t+1}, A';\, \bm{\theta}) \color{black} - \color{blue} Q(S_t, A_t) \color{black}; \theta \big ]^2$
+    \item Loss function $\mathcal{L} = \big [ \color{red} R_t + \gamma \max_{A'} Q(S_{t+1}, A';\, \bm{\theta}) \color{black} - \color{blue} Q(S_t, A_t) \color{black}; \theta \big ]^2$
 \end{itemize}
 \end{block}
 \begin{block}{Deep Policy Gradients}
@@ -181,7 +194,7 @@
 \begin{itemize}
     \item Extension of MDP framework
     \item Multiple adaptive agents are present
-    \item The agents receive a single reward, based on their joint action set
+    \item The agents receive a single, common reward, based on their joint actions
     \item Allows for emergent strategies, but difficult to train
     \item \emph{Credit assignment}: which agent deserves the credit for the win
 \end{itemize}
