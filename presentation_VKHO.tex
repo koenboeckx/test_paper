@@ -215,7 +215,7 @@
 \begin{itemize}
     \item True multi-agent algorithm
     \item Centralised learning - Decentralised execution
-    \item Compute $Q_{tot} = f(Q_1, \dots Q_N)$ such that $\frac{\partial Q_{tot}}{\partial Q_i} \geq 0$
+    \item Compute $Q_{tot} = f(Q_1, \dots, Q_N)$ such that $\frac{\partial Q_{tot}}{\partial Q_i} \geq 0$
 \end{itemize}
 \end{block}
 \end{frame}
@@ -224,7 +224,7 @@
 \frametitle{QMix}
 \begin{block}{QMix}
 \begin{itemize}
-    \item True multi-agent algorithm
+    \item True multi-agent algorithm, based on Q-learning
     \item Centralised learning - Decentralised execution
     \item Compute $Q_{tot} = f(Q_1, \dots Q_N)$ such that $\frac{\partial Q_{tot}}{\partial Q_i} \geq 0$
 \end{itemize}
@@ -237,10 +237,27 @@
 
 \section{Modelling the battlefield}
 \begin{frame}{Modelling the battlefield}
-\begin{block}{An algorithmic model}
+\begin{block}{An algorithmic model - What}
 \begin{itemize}
     \item A piece of software that simulates a battlefield
-    \item Multiple agents on a terrain with obstacles, each agent can take certain actions
+    \begin{itemize}
+        \item Environment $\leftrightarrow$ Agents
+        \item Terrain contains obstacles that block visibility and movement
+    \end{itemize}
+    \item Goal:
+    \begin{itemize}
+        \item Generate episodes to train on
+        \item Simplifications become explicit
+    \end{itemize}
+\end{itemize}
+\end{block}
+\end{frame}
+
+
+\begin{frame}{Modelling the battlefield}
+\begin{block}{An algorithmic model - How}
+\begin{itemize}
+    \item Each agent can take certain actions: {\tt move}, {\tt aim}, {\tt fire}, \ldots
     \item Agents can shoot at one another; if in range $\rightarrow$ kill
     \item The environment enforces constraints:
         \begin{itemize}
@@ -251,11 +268,9 @@
         \end{itemize}
     \item The environment takes the actions of the agents and changes state.
     \item Afterwards, the environment returns an \emph{observation} to agents
+    \item Team wins if all opposing agents are dead
 \end{itemize}
 \end{block}
-
-% TODO: explain why: (1) generate episodes
-%                    (2) explicit about simplifications
 \end{frame}
 
 \begin{frame}{Modelling the battlefield}
@@ -275,6 +290,12 @@
 \end{figure}
 
 \column{0.4\textwidth}
+\begin{block}{Setup}
+\begin{itemize}
+    \item $2$ vs $2$
+    \item Board: $7$-by-$7$
+\end{itemize}
+\end{block}
 \begin{block}{Comparison}
 \begin{itemize}
     \item REINFORCE is best
@@ -309,6 +330,7 @@
 \begin{columns}
 
 \column{0.5\textwidth}
+\begin{block}{}
 \begin{itemize}
     \item Playing against random agents is not that hard
     \item Idea:
@@ -317,9 +339,9 @@
             \item Transfer trained model to opponents
             \item Continue training against better opponents
         \end{enumerate}
-    \item Finally, obtain good strategy
+    \item Finally, obtain strategy that also works against more intelligent opponents
 \end{itemize}
-
+\end{block}
 \column{0.6\textwidth}
 \begin{figure}[htp]
     \centering

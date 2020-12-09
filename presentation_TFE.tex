@@ -1,6 +1,7 @@
 \documentclass{beamer}
 %\usetheme{Boadilla}
 \usetheme{Darmstadt}
+\setbeamercovered{transparent}
 
 \title{Multi-Agent Learning - TFE Proposal}
 %\subtitle{Using Beamer}
@@ -29,11 +30,18 @@
 \frametitle{What is Multi-Agent (MA) learning?}
 \begin{itemize}
     \item Multiple `agents` act in an environment.
+    \item An `agent` is an (real/simulated) entity that
+        \begin{itemize}
+            \item observes his surroundings
+            \item and chooses her actions based on this observation
+        \end{itemize}
+    \pause
     \item The `environment` has rules
         \begin{itemize}
             \item Which actions are allowed?
             \item What are the consequences of actions?
-        \end{itemize} 
+        \end{itemize}
+    \pause
     \item How does the opponent behave?
     \item How can agents coordinate actions to achieve optimal result?
 \end{itemize}
@@ -46,11 +54,12 @@
         \begin{itemize}
             \item \emph{Supervised Learning}: Learn from examples $(\mathbf{x}, y) \rightarrow y = f(\mathbf{x})$
             %\item $(\mathbf{x}, y) \rightarrow y = f(\mathbf{x})$
-            \item Example: detect cats in Youtube videos
+            \item Example: detect cats in YouTube videos
         \end{itemize}
+    \pause
     \item If we don't have the result $y$, but only a reward signal $r$?
     \begin{itemize}
-        \item \emph{Reinforcement Learning}
+        \item \textbf{Reinforcement Learning}
         \item The agent learns a behavior through interaction with his environment
         \item Learning is done with neural networks
         \item Example: Control of a robot arm
@@ -75,8 +84,14 @@
         \end{itemize}
     \item Every agent / team receives a reward to steer learning
     \item Problem is difficult because non-stationary environment
-    \item Example: AlphaGo
+    \item Example: AlphaGo / AlphaStar
 \end{itemize}
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=8cm]{images/starcraft.png}
+    %\caption{The agent-environment interface of an MDP (reproduced from \cite{sutton2018reinforcement})}
+    \label{fig:mdp}
+\end{figure}
 \end{frame}
 
 \begin{frame}
@@ -127,6 +142,7 @@
     \item How complex should the neural network be?
     \item Communication between agents during learning and/or execution
     \item Is what we learned still valid when the terrain changes?
+    \item Can we deduce behavior of opponent (opponent modelling)
     \item Can we improve performance for real-time processing?
 \end{itemize}
 \end{frame}
@@ -134,7 +150,7 @@
 \begin{frame}
 \frametitle{What will you learn?}
 \begin{itemize}
-    \item Lots of programming (Python)
+    \item Lots of programming ({\tt Python})
     \item Deep learning: how to train complex neural networks
     \begin{itemize}
         \item {\tt PyTorch}, {\tt TensorFlow}, ...
